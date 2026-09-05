@@ -116,16 +116,7 @@ export default function LandingPage() {
               <a
                 key={item}
                 href={`#${item.toLowerCase().replace(/\s+/g, "-")}`}
-                className="px-3.5 py-1.5 rounded-lg text-sm font-500 transition-colors cursor-pointer"
-                style={{ color: "var(--text-muted)" }}
-                onMouseEnter={(e) => {
-                  (e.target as HTMLElement).style.background = "var(--bg-muted)";
-                  (e.target as HTMLElement).style.color = "var(--text-primary)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.target as HTMLElement).style.background = "transparent";
-                  (e.target as HTMLElement).style.color = "var(--text-muted)";
-                }}
+                className="px-3.5 py-1.5 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 {item}
               </a>
