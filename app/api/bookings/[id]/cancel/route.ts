@@ -78,7 +78,7 @@ export async function POST(
         await tx.payment.update({
           where: { id: booking.payment.id },
           data: {
-            status: refunded ? PaymentStatus.REFUNDED : booking.payment.status,
+            status: PaymentStatus.REFUNDED,
           },
         });
       }

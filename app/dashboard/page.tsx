@@ -58,7 +58,7 @@ export default async function DashboardPage() {
     return sum;
   }, 0);
 
-  const pendingPayoutPaise = bookings.reduce((sum, b) => {
+  const pendingPayoutPaise = confirmedBookings.reduce((sum, b) => {
     if (b.payment && b.payment.status === "CAPTURED" && b.payment.payoutStatus === "NOT_PAID_OUT") {
       return sum + b.payment.creatorPayoutPaise;
     }

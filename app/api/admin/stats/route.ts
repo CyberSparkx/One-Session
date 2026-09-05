@@ -24,9 +24,14 @@ export async function GET() {
       }
     }
 
-    // Aggregate captured payments
+    // Aggregate captured payments for active bookings
     const payments = await prisma.payment.findMany({
-      where: { status: PaymentStatus.CAPTURED },
+      where: {
+        status: PaymentStatus.CAPTURED,
+        booking: {
+          status: { in: ["CONFIRMED", "COMPLETED"] },
+        },
+      },
     });
 
     const totalGmvPaise = payments.reduce((sum, p) => sum + p.amountTotalPaise, 0);
