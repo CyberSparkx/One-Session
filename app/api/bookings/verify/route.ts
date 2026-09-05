@@ -42,7 +42,11 @@ export async function POST(req: Request) {
       });
 
       if (!isValid) {
-        console.warn("Payment signature verification mismatch");
+        console.error("Payment signature verification mismatch");
+        return NextResponse.json(
+          { error: "Payment signature verification failed. Invalid transaction." },
+          { status: 400 }
+        );
       }
     }
 

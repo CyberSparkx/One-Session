@@ -33,6 +33,38 @@ interface Slot {
   displayTime: string;
 }
 
+const loadRazorpayScript = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined") {
+      resolve(false);
+      return;
+    }
+    if ((window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const existing = document.querySelector<HTMLScriptElement>(
+      'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
+    );
+    if (existing) {
+      if ((window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+      existing.addEventListener("load", () => resolve(true));
+      existing.addEventListener("error", () => resolve(false));
+      setTimeout(() => resolve(Boolean((window as any).Razorpay)), 1500);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 export default function BookingPage({
   params,
 }: {
@@ -146,6 +178,10 @@ export default function BookingPage({
     }
   }, [allAvailableDates, selectedDate]);
 
+  useEffect(() => {
+    loadRazorpayScript();
+  }, []);
+
   const DATES_PER_PAGE = 6;
   const totalPages = Math.max(1, Math.ceil(allAvailableDates.length / DATES_PER_PAGE));
   const currentDatesToShow = allAvailableDates.slice(
@@ -163,6 +199,18 @@ export default function BookingPage({
     setError("");
 
     try {
+      const isPaid = (sessionType?.priceInPaise || 0) > 0;
+      if (isPaid) {
+        const isLoaded = await loadRazorpayScript();
+        if (!isLoaded || !(window as any).Razorpay) {
+          setError(
+            "Could not connect to the Razorpay payment gateway. Please disable ad-blockers or check your connection and try again."
+          );
+          setSubmitting(false);
+          return;
+        }
+      }
+
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -184,24 +232,31 @@ export default function BookingPage({
         return;
       }
 
-      if (data.razorpayOrderId && window.Razorpay) {
+      // Free session: directly proceed to confirmation
+      if (data.amountTotalPaise === 0) {
+        router.push(`/booking/${data.bookingId}/confirmation`);
+        return;
+      }
+
+      // Paid session: launch Razorpay Checkout modal
+      if (data.razorpayOrderId && (window as any).Razorpay) {
         const options = {
           key: data.razorpayKeyId,
           amount: data.amountTotalPaise,
           currency: "INR",
           name: "SessionBook",
-          description: sessionType.title,
+          description: `${sessionType?.title || "1:1 Session"} with ${creator?.user?.name || "Creator"}`,
           order_id: data.razorpayOrderId,
           prefill: {
             name: formData.clientName,
             email: formData.clientEmail,
             contact: formData.clientPhone,
           },
-          theme: { color: "#F97316" },
+          theme: { color: "#EA580C" },
           handler: async function (response: any) {
             setSubmitting(true);
             try {
-              await fetch("/api/bookings/verify", {
+              const verifyRes = await fetch("/api/bookings/verify", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -211,10 +266,23 @@ export default function BookingPage({
                   razorpaySignature: response.razorpay_signature,
                 }),
               });
-            } catch (err) {
+
+              if (!verifyRes.ok) {
+                const verifyData = await verifyRes.json();
+                setError(
+                  verifyData.error ||
+                    "Payment signature verification failed. Please contact support."
+                );
+                setSubmitting(false);
+                return;
+              }
+
+              router.push(`/booking/${data.bookingId}/confirmation`);
+            } catch (err: any) {
               console.error("Verification error:", err);
+              // In case of a temporary browser error after payment capture, direct to confirmation
+              router.push(`/booking/${data.bookingId}/confirmation`);
             }
-            router.push(`/booking/${data.bookingId}/confirmation`);
           },
           modal: {
             ondismiss: function () {
@@ -222,17 +290,21 @@ export default function BookingPage({
             },
           },
         };
-        const rzp = new window.Razorpay(options);
+
+        const rzp = new (window as any).Razorpay(options);
         rzp.on("payment.failed", function (failResponse: any) {
           setError(
             failResponse.error?.description ||
-              "Payment failed or was declined. Please try again."
+              "Payment failed or was declined. You have not been charged."
           );
           setSubmitting(false);
         });
         rzp.open();
       } else {
-        router.push(`/booking/${data.bookingId}/confirmation`);
+        setError(
+          "Payment gateway could not be initialized. Please reload the page and try again."
+        );
+        setSubmitting(false);
       }
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred");

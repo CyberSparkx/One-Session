@@ -59,19 +59,44 @@ export async function POST(req: Request) {
       },
     });
 
-    const isOverlapping = conflictingBookings.some((b) =>
-      areIntervalsOverlapping(
+    const normalizedEmail = clientEmail.toLowerCase().trim();
+
+    const isOverlappingWithOther = conflictingBookings.some((b) => {
+      const isOverlap = areIntervalsOverlapping(
         { start: startDate, end: endDate },
         { start: new Date(b.scheduledStart), end: new Date(b.scheduledEnd) }
-      )
-    );
+      );
+      if (!isOverlap) return false;
 
-    if (isOverlapping) {
+      // Confirmed bookings always block
+      if (b.status === BookingStatus.CONFIRMED) return true;
+
+      // If pending payment is by the same client email, allow them to re-attempt payment!
+      if (b.clientEmail.toLowerCase().trim() === normalizedEmail) {
+        return false;
+      }
+      return true;
+    });
+
+    if (isOverlappingWithOther) {
       return NextResponse.json(
         { error: "This time slot was just taken. Please select another slot." },
         { status: 409 }
       );
     }
+
+    // Cancel any prior abandoned PENDING_PAYMENT bookings for this slot by this same client
+    await prisma.booking.updateMany({
+      where: {
+        creatorId: sessionType.creatorId,
+        clientEmail: normalizedEmail,
+        status: BookingStatus.PENDING_PAYMENT,
+        scheduledStart: startDate,
+      },
+      data: {
+        status: BookingStatus.CANCELLED,
+      },
+    });
 
     // 3. Platform 4% fee and creator 96% payout calculation
     const platformFeePaise = Math.round(priceInPaise * 0.04);

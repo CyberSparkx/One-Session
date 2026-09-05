@@ -16,6 +16,7 @@ import {
   CalendarCheck2,
 } from "lucide-react";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import PayPendingBookingButton from "@/components/PayPendingBookingButton";
 
 export const dynamic = "force-dynamic";
 
@@ -116,16 +117,40 @@ export default async function BookingConfirmationPage({
                   Payment Verification Pending
                 </h1>
                 <p className="text-xs sm:text-sm text-gray-500 mt-1 max-w-sm mx-auto">
-                  We haven't received confirmation from the payment gateway yet. If you completed payment, please reload this page.
+                  Complete payment below to confirm your session. Once payment is processed, your slot is instantly reserved and calendar invites will be sent.
                 </p>
               </div>
-              <Link
-                href={`/u/${creator.slug}/book/${sessionType.id}`}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-orange-600 hover:bg-orange-700 transition-colors shadow-xs"
-              >
-                <span>Retry Payment</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+              {payment?.razorpayOrderId ? (
+                <div className="pt-2 space-y-3">
+                  <PayPendingBookingButton
+                    bookingId={booking.id}
+                    orderId={payment.razorpayOrderId}
+                    keyId={process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder"}
+                    amountPaise={payment.amountTotalPaise}
+                    sessionTitle={sessionType.title}
+                    creatorName={creator.user.name}
+                    clientName={booking.clientName}
+                    clientEmail={booking.clientEmail}
+                    clientPhone={booking.clientPhone}
+                  />
+                  <div>
+                    <Link
+                      href={`/u/${creator.slug}/book/${sessionType.id}`}
+                      className="text-xs text-gray-500 hover:text-gray-700 underline font-medium transition-colors"
+                    >
+                      Or pick another time slot
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  href={`/u/${creator.slug}/book/${sessionType.id}`}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-orange-600 hover:bg-orange-700 transition-colors shadow-xs"
+                >
+                  <span>Select Another Slot</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              )}
             </>
           )}
         </div>
