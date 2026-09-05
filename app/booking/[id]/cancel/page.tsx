@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, use } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, CheckCircle2, Sparkles, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 
 export default function CancelBookingPage({
   params,
@@ -14,7 +14,6 @@ export default function CancelBookingPage({
   const { id } = resolvedParams;
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
-  const router = useRouter();
 
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
@@ -53,32 +52,32 @@ export default function CancelBookingPage({
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6">
+    <div className="min-h-screen bg-[#FAFAFA] text-gray-900 flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto">
+          <div className="w-12 h-12 rounded-xl bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mx-auto">
             <AlertTriangle className="w-6 h-6" />
           </div>
-          <h1 className="text-xl font-bold text-white">Cancel Your Booking</h1>
-          <p className="text-xs text-slate-400">
+          <h1 className="text-xl font-bold text-gray-950">Cancel Your Booking</h1>
+          <p className="text-xs text-gray-500">
             Cancelling will release your reserved slot so others may book it.
           </p>
         </div>
 
         {success ? (
-          <div className="p-5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-3">
-            <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto" />
-            <h2 className="text-sm font-semibold text-emerald-300">
+          <div className="p-5 rounded-xl bg-emerald-50 border border-emerald-200 text-center space-y-3">
+            <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
+            <h2 className="text-sm font-bold text-emerald-900">
               Booking Successfully Cancelled
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-gray-600">
               Your appointment has been removed and any applicable refund will be processed automatically.
             </p>
             <div className="pt-2">
               <Link
                 href="/"
-                className="inline-block py-2 px-4 rounded-lg bg-slate-800 text-xs font-medium text-slate-200 hover:bg-slate-700"
+                className="inline-block py-2 px-4 rounded-xl bg-gray-900 text-xs font-semibold text-white hover:bg-black transition-colors"
               >
                 Return to Homepage
               </Link>
@@ -87,14 +86,14 @@ export default function CancelBookingPage({
         ) : (
           <form onSubmit={handleCancel} className="space-y-4">
             {error && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
+              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs flex items-center gap-2 font-medium">
                 <XCircle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
                 Reason for cancellation (optional)
               </label>
               <textarea
@@ -102,14 +101,14 @@ export default function CancelBookingPage({
                 placeholder="Let the creator know why you're cancelling..."
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-xs placeholder-gray-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading || !token}
-              className="w-full py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-medium text-xs shadow-lg shadow-rose-600/20 transition-all disabled:opacity-50 cursor-pointer"
+              className="w-full py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-xs shadow-xs transition-all disabled:opacity-50 cursor-pointer"
             >
               {loading ? "Cancelling..." : "Confirm Cancellation"}
             </button>
@@ -117,7 +116,7 @@ export default function CancelBookingPage({
             <div className="text-center pt-2">
               <Link
                 href={`/booking/${id}/confirmation`}
-                className="text-xs text-slate-400 hover:text-slate-200"
+                className="text-xs text-gray-500 hover:text-gray-800"
               >
                 Nevermind, keep my booking
               </Link>
