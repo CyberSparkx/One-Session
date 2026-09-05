@@ -25,6 +25,7 @@ export default function RootLayout({
         <SessionProvider>
           {children}
         </SessionProvider>
+        <script src="https://checkout.razorpay.com/v1/checkout.js" async />
       </body>
     </html>
   );
