@@ -8,12 +8,10 @@ import {
   Clock,
   ArrowUpRight,
   CalendarCheck2,
-  AlertCircle,
   Video,
-  CheckCircle,
+  CheckCircle2,
   ExternalLink,
-  TrendingUp,
-  Zap,
+  Plus,
 } from "lucide-react";
 import { format } from "date-fns";
 import CancelSessionButton from "@/components/CancelSessionButton";
@@ -74,122 +72,92 @@ export default async function DashboardPage() {
     {
       label: "Total Net Earnings",
       value: `₹${totalEarningsInRupees}`,
-      sub: "After 4% platform commission",
+      sub: "After 4% platform fee",
       icon: IndianRupee,
-      color: "#10b981",
-      colorDim: "rgba(16,185,129,0.12)",
-      glow: "0 0 30px rgba(16,185,129,0.1)",
+      iconBg: "bg-emerald-50 text-emerald-600 border-emerald-200",
     },
     {
       label: "Pending Payout",
       value: `₹${pendingPayoutInRupees}`,
-      sub: "Ready for next payout cycle",
+      sub: "Auto-processed weekly",
       icon: Clock,
-      color: "#f59e0b",
-      colorDim: "rgba(245,158,11,0.12)",
-      glow: "0 0 30px rgba(245,158,11,0.08)",
+      iconBg: "bg-amber-50 text-amber-600 border-amber-200",
     },
     {
       label: "Upcoming Sessions",
       value: String(upcomingBookings.length),
-      sub: "Confirmed & scheduled",
+      sub: "Confirmed on calendar",
       icon: CalendarCheck2,
-      color: "#6366f1",
-      colorDim: "rgba(99,102,241,0.12)",
-      glow: "0 0 30px rgba(99,102,241,0.12)",
+      iconBg: "bg-orange-50 text-orange-600 border-orange-200",
     },
     {
-      label: "Total Completed",
+      label: "Total Hosted",
       value: String(pastBookings.length),
-      sub: "Successfully hosted",
-      icon: CheckCircle,
-      color: "#0f766e",
-      colorDim: "rgba(15,118,110,0.12)",
-      glow: "0 0 30px rgba(15,118,110,0.1)",
+      sub: "Successfully completed",
+      icon: CheckCircle2,
+      iconBg: "bg-blue-50 text-blue-600 border-blue-200",
     },
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-12">
       {/* ── Welcome Header ── */}
-      <div
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b"
-        style={{ borderColor: "var(--glass-border)" }}
-      >
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-gray-200">
         <div>
-          <p className="badge mb-2 w-fit">Creator Dashboard</p>
-          <h1 className="text-2xl sm:text-3xl font-800 text-white tracking-tight">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
+              Overview
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-950 tracking-tight">
             Welcome back, {user.name.split(" ")[0]}
           </h1>
-          <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
-            Here's what's happening with your 1:1 sessions.
+          <p className="text-sm text-gray-500 mt-1">
+            Track your bookings, earnings, and upcoming scheduled sessions.
           </p>
         </div>
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-2.5 flex-shrink-0">
           <Link
             href={`/u/${profile.slug}`}
             target="_blank"
-            className="btn-primary btn-ghost text-sm py-2 px-4 gap-1.5"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 transition-colors shadow-xs"
           >
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-3.5 h-3.5" />
             Public Page
           </Link>
           <Link
             href="/dashboard/session-types"
-            className="btn-primary text-sm py-2 px-4 gap-1.5"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-orange-600 hover:bg-orange-700 transition-colors shadow-xs shadow-orange-500/20"
           >
-            <Zap className="w-4 h-4" />
-            Add Session
-            <ArrowUpRight className="w-3.5 h-3.5" />
+            <Plus className="w-4 h-4" />
+            New Session Type
           </Link>
         </div>
       </div>
 
       {/* ── Metric Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {METRICS.map((metric, i) => {
+        {METRICS.map((metric) => {
           const Icon = metric.icon;
           return (
             <div
               key={metric.label}
-              className="glass-card p-5 relative overflow-hidden animate-fade-up"
-              style={{ animationDelay: `${i * 80}ms` }}
+              className="bg-white border border-gray-200/90 rounded-2xl p-5 shadow-xs transition-all hover:border-gray-300 hover:shadow-sm"
             >
-              {/* Corner glow */}
-              <div
-                className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-50"
-                style={{
-                  background: `radial-gradient(circle, ${metric.color}20 0%, transparent 70%)`,
-                  filter: "blur(10px)",
-                  transform: "translate(30%, -30%)",
-                }}
-              />
-              <div className="relative z-10">
-                <div className="flex items-start justify-between mb-4">
-                  <p
-                    className="text-[10px] font-700 uppercase tracking-widest"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    {metric.label}
-                  </p>
-                  <div
-                    className="w-8 h-8 rounded-xl flex items-center justify-center"
-                    style={{
-                      background: metric.colorDim,
-                      border: `1px solid ${metric.color}25`,
-                      color: metric.color,
-                    }}
-                  >
-                    <Icon className="w-4 h-4" />
-                  </div>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  {metric.label}
+                </p>
+                <div
+                  className={`w-8 h-8 rounded-xl border flex items-center justify-center ${metric.iconBg}`}
+                >
+                  <Icon className="w-4 h-4" />
                 </div>
-                <p className="text-2xl font-800 text-white leading-none mb-1">
-                  {metric.value}
-                </p>
-                <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                  {metric.sub}
-                </p>
               </div>
+              <p className="text-2xl sm:text-3xl font-extrabold text-gray-950 tracking-tight leading-none mb-1.5">
+                {metric.value}
+              </p>
+              <p className="text-xs text-gray-400 font-medium">{metric.sub}</p>
             </div>
           );
         })}
@@ -199,16 +167,15 @@ export default async function DashboardPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-700 text-white">Upcoming Bookings</h2>
-            <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+            <h2 className="text-lg font-bold text-gray-900 tracking-tight">Upcoming Bookings</h2>
+            <p className="text-xs text-gray-500">
               {upcomingBookings.length} session{upcomingBookings.length !== 1 ? "s" : ""} scheduled
             </p>
           </div>
           {upcomingBookings.length > 0 && (
             <Link
               href="/dashboard/calendar"
-              className="text-xs font-600 flex items-center gap-1 transition-colors"
-              style={{ color: "#a5b4fc" }}
+              className="text-xs font-semibold text-orange-600 hover:text-orange-700 flex items-center gap-1 transition-colors"
             >
               Calendar view
               <ArrowUpRight className="w-3.5 h-3.5" />
@@ -218,93 +185,68 @@ export default async function DashboardPage() {
 
         {upcomingBookings.length === 0 ? (
           /* Empty state */
-          <div
-            className="glass-card p-10 flex flex-col items-center text-center gap-4"
-          >
-            <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center"
-              style={{
-                background: "rgba(99,102,241,0.1)",
-                border: "1px solid rgba(99,102,241,0.2)",
-              }}
-            >
-              <CalendarDays className="w-7 h-7" style={{ color: "#6366f1" }} />
+          <div className="bg-white border border-gray-200 rounded-2xl p-10 flex flex-col items-center text-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center text-orange-600">
+              <CalendarDays className="w-6 h-6" />
             </div>
             <div>
-              <p className="font-700 text-white text-base">No upcoming sessions</p>
-              <p className="text-sm mt-1 max-w-xs" style={{ color: "var(--text-muted)" }}>
-                Share your booking link with clients or on social media to get booked.
+              <p className="font-bold text-gray-900 text-base">No upcoming sessions yet</p>
+              <p className="text-xs text-gray-500 mt-1 max-w-sm">
+                Share your personal booking link with clients, in your bio, or via social channels to get booked.
               </p>
             </div>
-            <Link href={`/u/${profile.slug}`} target="_blank" className="btn-primary text-sm py-2.5 px-5">
-              <ExternalLink className="w-4 h-4" />
-              View Public Page
+            <Link
+              href={`/u/${profile.slug}`}
+              target="_blank"
+              className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-gray-900 hover:bg-black text-white transition-colors"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              View Your Booking Page
             </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {upcomingBookings.map((booking, i) => {
+            {upcomingBookings.map((booking) => {
               const start = new Date(booking.scheduledStart);
               const end = new Date(booking.scheduledEnd);
               return (
                 <div
                   key={booking.id}
-                  className="glass-card p-5 space-y-4 animate-fade-up"
-                  style={{ animationDelay: `${i * 60}ms` }}
+                  className="bg-white border border-gray-200 rounded-2xl p-5 space-y-4 hover:border-gray-300 transition-all shadow-xs"
                 >
                   {/* Top row */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <span
-                        className="text-[10px] font-700 uppercase tracking-wider"
-                        style={{ color: "#a5b4fc" }}
-                      >
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-md">
                         {booking.sessionType.title}
                       </span>
-                      <h3 className="text-base font-700 text-white mt-0.5 truncate">
+                      <h3 className="text-base font-bold text-gray-950 mt-2 truncate">
                         {booking.clientName}
                       </h3>
-                      <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>
+                      <p className="text-xs text-gray-500 truncate">
                         {booking.clientEmail}
                       </p>
                     </div>
-                    <span
-                      className="px-3 py-1.5 rounded-xl text-xs font-700 flex-shrink-0"
-                      style={{
-                        background: "rgba(16,185,129,0.12)",
-                        color: "#10b981",
-                        border: "1px solid rgba(16,185,129,0.25)",
-                      }}
-                    >
+                    <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex-shrink-0">
                       ₹{(booking.sessionType.priceInPaise / 100).toLocaleString("en-IN")}
                     </span>
                   </div>
 
                   {/* Time row */}
-                  <div
-                    className="flex items-center justify-between text-xs pt-3 border-t"
-                    style={{ borderColor: "var(--glass-border)" }}
-                  >
-                    <div className="flex items-center gap-1.5" style={{ color: "var(--text-secondary)" }}>
-                      <Clock className="w-3.5 h-3.5" style={{ color: "var(--text-muted)" }} />
+                  <div className="flex items-center justify-between text-xs pt-3 border-t border-gray-100 text-gray-600">
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-gray-400" />
                       <span>{format(start, "EEE, MMM d • h:mm a")} – {format(end, "h:mm a")}</span>
                     </div>
-                    <div className="flex items-center gap-1" style={{ color: "#a5b4fc" }}>
-                      <Video className="w-3.5 h-3.5" />
-                      <span className="font-600">Online</span>
+                    <div className="flex items-center gap-1 text-gray-700 font-medium">
+                      <Video className="w-3.5 h-3.5 text-orange-600" />
+                      <span>1:1 Call</span>
                     </div>
                   </div>
 
                   {/* Notes */}
                   {booking.notes && (
-                    <p
-                      className="text-xs italic leading-relaxed p-3 rounded-xl"
-                      style={{
-                        background: "rgba(255,255,255,0.03)",
-                        border: "1px solid var(--glass-border)",
-                        color: "var(--text-muted)",
-                      }}
-                    >
+                    <p className="text-xs italic bg-gray-50 border border-gray-100 text-gray-600 p-2.5 rounded-xl">
                       "{booking.notes}"
                     </p>
                   )}
@@ -329,70 +271,52 @@ export default async function DashboardPage() {
       {pastBookings.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-700 text-white">Past Sessions</h2>
-            <span className="text-xs font-600" style={{ color: "var(--text-muted)" }}>
+            <h2 className="text-lg font-bold text-gray-900 tracking-tight">Past Sessions</h2>
+            <span className="text-xs font-medium text-gray-500">
               {pastBookings.length} total
             </span>
           </div>
 
-          <div
-            className="rounded-2xl overflow-hidden border"
-            style={{ borderColor: "var(--glass-border)" }}
-          >
-            <div
-              className="overflow-x-auto"
-              style={{ background: "var(--glass-bg)" }}
-            >
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs">
+            <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr
-                    className="border-b"
-                    style={{
-                      background: "rgba(255,255,255,0.03)",
-                      borderColor: "var(--glass-border)",
-                    }}
-                  >
+                  <tr className="border-b border-gray-200 bg-gray-50/75">
                     {["Client", "Session", "Date", "Payout", "Status"].map((h) => (
                       <th
                         key={h}
-                        className="py-3 px-4 text-[10px] font-700 uppercase tracking-widest"
-                        style={{ color: "var(--text-muted)" }}
+                        className="py-3 px-4 text-[11px] font-bold uppercase tracking-wider text-gray-500"
                       >
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody>
-                  {pastBookings.map((booking, i) => (
+                <tbody className="divide-y divide-gray-100">
+                  {pastBookings.map((booking) => (
                     <tr
                       key={booking.id}
-                      className="border-b transition-colors"
-                      style={{
-                        borderColor: "var(--glass-border)",
-                        background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
-                      }}
+                      className="hover:bg-gray-50/60 transition-colors"
                     >
-                      <td className="py-3.5 px-4 font-700 text-white text-sm">
+                      <td className="py-3 px-4 font-semibold text-gray-900 text-sm">
                         {booking.clientName}
                       </td>
-                      <td className="py-3.5 px-4 text-sm" style={{ color: "var(--text-secondary)" }}>
+                      <td className="py-3 px-4 text-sm text-gray-600">
                         {booking.sessionType.title}
                       </td>
-                      <td className="py-3.5 px-4 text-xs" style={{ color: "var(--text-muted)" }}>
+                      <td className="py-3 px-4 text-xs text-gray-500">
                         {format(new Date(booking.scheduledStart), "MMM d, yyyy · h:mm a")}
                       </td>
-                      <td className="py-3.5 px-4 font-700 text-sm" style={{ color: "#10b981" }}>
+                      <td className="py-3 px-4 font-semibold text-sm text-emerald-600">
                         ₹{((booking.payment?.creatorPayoutPaise || booking.sessionType.priceInPaise * 0.96) / 100).toLocaleString("en-IN")}
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td className="py-3 px-4">
                         <span
-                          className="inline-flex px-2.5 py-1 rounded-lg text-[11px] font-700"
-                          style={
+                          className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                             booking.status === "COMPLETED"
-                              ? { background: "rgba(16,185,129,0.1)", color: "#10b981", border: "1px solid rgba(16,185,129,0.2)" }
-                              : { background: "rgba(255,255,255,0.05)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.08)" }
-                          }
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-gray-100 text-gray-600 border border-gray-200"
+                          }`}
                         >
                           {booking.status}
                         </span>
