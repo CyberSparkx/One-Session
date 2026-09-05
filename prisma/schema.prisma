@@ -29,6 +29,7 @@ model CreatorProfile {
   bio                   String?
   avatarUrl             String?
   isPublished           Boolean                @default(false)
+  balanceAdjustmentPaise Int                   @default(0) // Negative for fee debits, positive for credits
   payoutMethod          String?                // "bank" | "upi" | "razorpay_route"
   payoutDetails         String?                // JSON string: account no, IFSC, UPI id, etc.
   sessionTypes          SessionType[]
@@ -98,6 +99,8 @@ model Payment {
   platformFeePaise   Int
   creatorPayoutPaise Int
   status             String   @default("CREATED") // CREATED, CAPTURED, FAILED, REFUNDED
+  refundType         String?  // "FULL" | "PARTIAL"
+  refundAmountPaise  Int?
   payoutStatus       String   @default("NOT_PAID_OUT") // NOT_PAID_OUT, ROUTE_TRANSFERRED, MANUALLY_PAID
   createdAt          DateTime @default(now())
 }
