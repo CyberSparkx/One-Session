@@ -1,778 +1,608 @@
 import Link from "next/link";
 import {
-  Calendar,
-  CreditCard,
-  Video,
+  ArrowRight,
+  CalendarCheck2,
+  IndianRupee,
   ShieldCheck,
   Clock,
-  TrendingUp,
-  ArrowRight,
-  Globe,
-  Zap,
-  BarChart3,
-  Lock,
-  Mail,
-  Users,
-  CheckCircle2,
   Star,
+  Zap,
+  Video,
+  Copy,
+  TrendingUp,
+  CheckCircle2,
+  Users,
   ChevronRight,
-  Sparkles,
 } from "lucide-react";
-import AnimatedBackground from "@/components/AnimatedBackground";
-import HeroBookingCard from "@/components/HeroBookingCard";
 
-/* ─── Static data ────────────────────────────────────────────────────────────── */
+/* ── Marquee items ─────────────────────────────────────────────────── */
+const MARQUEE_ITEMS = [
+  "Code Review", "Architecture Consulting", "Product Strategy", "UX Critique",
+  "Career Coaching", "Startup Mentorship", "Interview Prep", "Design Feedback",
+  "Growth Strategy", "Financial Planning", "Legal Advice", "Sales Coaching",
+  "Content Strategy", "AI/ML Consulting", "SEO Audit", "Brand Strategy",
+];
 
-const FEATURES = [
+/* ── Testimonials ──────────────────────────────────────────────────── */
+const TESTIMONIALS = [
   {
-    icon: Calendar,
-    title: "Smart Availability Engine",
-    desc: "Define recurring hours, date overrides, and buffer times. No double bookings, ever. Your calendar stays perfectly in sync.",
-    accent: "#6366f1",
-    accentDim: "rgba(99,102,241,0.1)",
-    size: "large",
+    name: "Priya Kapoor",
+    role: "UX Designer",
+    avatar: "PK",
+    text: "I made ₹40,000 in my first month just from 1:1 design reviews. The booking flow is so clean that clients never drop off.",
+    sessions: 38,
   },
   {
-    icon: CreditCard,
-    title: "Instant Razorpay Checkout",
-    desc: "Clients pay via UPI, Cards, Netbanking, or Wallets. Instant confirmation, zero waiting.",
-    accent: "#10b981",
-    accentDim: "rgba(16,185,129,0.1)",
-    size: "small",
+    name: "Arjun Mehta",
+    role: "Senior Engineer",
+    avatar: "AM",
+    text: "I charge ₹2,500/hr for code reviews. SessionBook handles everything — booking, payment, reminders. I just show up.",
+    sessions: 112,
+  },
+  {
+    name: "Shreya Nair",
+    role: "Product Manager",
+    avatar: "SN",
+    text: "My public booking page looks so professional that clients often assume I have a whole team behind it. It's just me.",
+    sessions: 67,
+  },
+];
+
+/* ── Features ──────────────────────────────────────────────────────── */
+const FEATURES = [
+  {
+    icon: Zap,
+    title: "Live in under 10 minutes",
+    desc: "Create your account, set your session types, share your link. That's it. No developers required.",
+    color: "#F97316",
+    bg: "#FFF7ED",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Payments via Razorpay",
+    desc: "Every rupee is safe. We verify every transaction before your slot is confirmed. No fraud, no chargebacks.",
+    color: "#16A34A",
+    bg: "#DCFCE7",
+  },
+  {
+    icon: CalendarCheck2,
+    title: "Smart availability engine",
+    desc: "Set your working hours once. Clients only see slots that actually exist — no double bookings, ever.",
+    color: "#7C3AED",
+    bg: "#EDE9FE",
   },
   {
     icon: Video,
-    title: "Automated .ICS Invites",
-    desc: "Google Calendar, Apple, and Outlook sync automatically after every booking.",
-    accent: "#0f766e",
-    accentDim: "rgba(15,118,110,0.1)",
-    size: "small",
-  },
-  {
-    icon: BarChart3,
-    title: "Creator Analytics",
-    desc: "Track bookings, revenue, and popular session types at a glance.",
-    accent: "#f59e0b",
-    accentDim: "rgba(245,158,11,0.1)",
-    size: "small",
-  },
-  {
-    icon: Globe,
-    title: "Your Public Booking Page",
-    desc: "Share one link anywhere — social bios, LinkedIn, newsletters — and start getting paid.",
-    accent: "#6366f1",
-    accentDim: "rgba(99,102,241,0.1)",
-    size: "small",
-  },
-  {
-    icon: Lock,
-    title: "Secure & Compliant",
-    desc: "All payments are Razorpay-verified. Webhook signatures checked server-side on every transaction.",
-    accent: "#10b981",
-    accentDim: "rgba(16,185,129,0.1)",
-    size: "small",
+    title: "Auto calendar invites",
+    desc: "Every confirmed booking sends an .ics invite and Google Meet details to both parties automatically.",
+    color: "#0891B2",
+    bg: "#CFFAFE",
   },
 ];
 
 const STEPS = [
-  {
-    num: "01",
-    title: "Create your free account",
-    desc: "Sign up in 30 seconds with Google or email. Set your name, bio, and expertise.",
-  },
-  {
-    num: "02",
-    title: "List your session types",
-    desc: "Set your rates, durations, and availability windows. Define exactly when and how you work.",
-  },
-  {
-    num: "03",
-    title: "Share your booking link",
-    desc: "One URL — anywhere. Clients browse your slots, pay upfront, and get an instant calendar invite.",
-  },
-  {
-    num: "04",
-    title: "Show up & get paid",
-    desc: "Show up to the session. 96% of the fee hits your UPI or bank account — zero hidden charges.",
-  },
+  { num: "01", title: "Create your account", desc: "Sign up free in 30 seconds. No card, no commitment." },
+  { num: "02", title: "Add session types", desc: "Define what you offer, how long, and what you charge." },
+  { num: "03", title: "Share your page", desc: "Share /u/yourname anywhere — Twitter, Instagram, LinkedIn." },
+  { num: "04", title: "Get paid", desc: "Clients book and pay instantly. You keep 96% every time." },
 ];
 
-const TESTIMONIALS = [
-  {
-    quote:
-      "SessionBook changed how I monetize my expertise. I went from chasing clients to having a queue within two weeks.",
-    name: "Priya Sharma",
-    role: "Startup Advisor",
-    avatar: "PS",
-    rating: 5,
-    earnings: "₹1.4L this month",
-  },
-  {
-    quote:
-      "Setup took literally 10 minutes. The automatic calendar invites and Razorpay integration are flawless.",
-    name: "Rohan Mehta",
-    role: "Full-Stack Developer",
-    avatar: "RM",
-    rating: 5,
-    earnings: "280+ sessions booked",
-  },
-  {
-    quote:
-      "I love that the platform only takes 4%. Every other tool I tried took 15-20%. SessionBook respects creators.",
-    name: "Divya Nair",
-    role: "UX Consultant",
-    avatar: "DN",
-    rating: 5,
-    earnings: "96% payout rate",
-  },
-];
-
-const STATS = [
-  { value: "2,400+", label: "Sessions booked", icon: CalendarCheck },
-  { value: "₹1.2 Cr", label: "Paid to creators", icon: TrendingUp },
-  { value: "4.9 ★", label: "Average rating", icon: Star },
-];
-
-/* ─── Inline components ──────────────────────────────────────────────────────── */
-
-function CalendarCheck({ className }: { className?: string }) {
-  return <CheckCircle2 className={className} />;
-}
-
-function FeatureCard({
-  feature,
-  index,
-}: {
-  feature: (typeof FEATURES)[0];
-  index: number;
-}) {
-  const Icon = feature.icon;
-  const isLarge = feature.size === "large";
+export default function LandingPage() {
   return (
-    <div
-      className={`glass-card p-6 relative overflow-hidden group animate-fade-up ${
-        isLarge ? "md:col-span-2 md:row-span-1" : ""
-      }`}
-      style={{ animationDelay: `${index * 80}ms` }}
-    >
-      {/* Accent glow */}
-      <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-        style={{
-          background: `radial-gradient(ellipse at 0% 0%, ${feature.accentDim} 0%, transparent 60%)`,
-        }}
-      />
+    <div style={{ background: "var(--bg-page)", color: "var(--text-primary)" }}>
 
-      <div className="relative z-10">
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
-          style={{
-            background: feature.accentDim,
-            border: `1px solid ${feature.accent}30`,
-          }}
-        >
-          <Icon
-            className="w-5 h-5"
-            style={{ color: feature.accent }}
-          />
-        </div>
-
-        <h3
-          className={`font-700 text-white mb-2 ${
-            isLarge ? "text-xl" : "text-base"
-          }`}
-        >
-          {feature.title}
-        </h3>
-        <p className="text-sm text-slate-400 leading-relaxed">{feature.desc}</p>
-
-        {isLarge && (
-          <div className="mt-5 flex items-center gap-2 text-xs font-600" style={{ color: feature.accent }}>
-            <span>Learn more</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Page ───────────────────────────────────────────────────────────────────── */
-
-export default function HomePage() {
-  return (
-    <div
-      className="relative min-h-[100dvh] flex flex-col overflow-hidden"
-      style={{ background: "var(--bg-base)", color: "var(--text-primary)" }}
-    >
-      {/* Animated mesh background */}
-      <AnimatedBackground />
-
-      {/* ── Navigation ───────────────────────────────────────────────────────── */}
+      {/* ── Nav ─────────────────────────────────────────────────────── */}
       <header
-        className="relative z-30 border-b"
+        className="sticky top-0 z-50 border-b"
         style={{
-          borderColor: "rgba(255,255,255,0.06)",
-          background: "rgba(5,8,17,0.7)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
+          background: "rgba(255,255,255,0.92)",
+          backdropFilter: "blur(12px)",
+          borderColor: "var(--border-base)",
         }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
+        <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 font-800 text-lg text-gray-900">
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{
-                background:
-                  "linear-gradient(135deg, #6366f1 0%, #0f766e 100%)",
-                boxShadow: "0 4px 16px rgba(99,102,241,0.35)",
-              }}
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-900"
+              style={{ background: "var(--orange)" }}
             >
-              <Sparkles className="w-5 h-5 text-white" />
+              S
             </div>
-            <span className="font-800 text-lg text-white tracking-tight">
-              SessionBook
-            </span>
+            <span>SessionBook</span>
           </Link>
 
-          {/* Nav links — hidden on mobile */}
-          <nav className="hidden md:flex items-center gap-6 text-sm">
-            {["Features", "How It Works", "Pricing"].map((item) => (
+          <nav className="hidden md:flex items-center gap-1">
+            {["Features", "How it works", "Pricing"].map((item) => (
               <a
                 key={item}
-                href={`#${item.toLowerCase().replace(" ", "-")}`}
-                className="text-slate-400 hover:text-white transition-colors duration-150 font-500"
+                href={`#${item.toLowerCase().replace(/\s+/g, "-")}`}
+                className="px-3.5 py-1.5 rounded-lg text-sm font-500 transition-colors cursor-pointer"
+                style={{ color: "var(--text-muted)" }}
+                onMouseEnter={(e) => {
+                  (e.target as HTMLElement).style.background = "var(--bg-muted)";
+                  (e.target as HTMLElement).style.color = "var(--text-primary)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.target as HTMLElement).style.background = "transparent";
+                  (e.target as HTMLElement).style.color = "var(--text-muted)";
+                }}
               >
                 {item}
               </a>
             ))}
           </nav>
 
-          {/* Auth CTAs */}
           <div className="flex items-center gap-2">
-            <Link
-              href="/login"
-              className="hidden sm:block py-2 px-4 rounded-xl text-sm font-600 text-slate-300 hover:text-white transition-colors cursor-pointer"
-              style={{ background: "transparent" }}
-            >
-              Sign In
+            <Link href="/login" className="btn btn-ghost text-sm hidden sm:flex">
+              Log in
             </Link>
-            <Link
-              href="/signup"
-              className="btn-primary text-sm py-2 px-5"
-            >
-              Start Free
-              <ArrowRight className="w-4 h-4" />
+            <Link href="/signup" className="btn btn-primary text-sm">
+              Get started free
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
       </header>
 
-      <main className="relative z-10 flex-1">
+      {/* ── Hero ────────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden pt-16 pb-0 md:pt-24 md:pb-0">
+        {/* Dot grid */}
+        <div
+          className="dot-grid absolute inset-0 opacity-60"
+          style={{
+            maskImage: "radial-gradient(ellipse 80% 70% at 50% 0%, black 40%, transparent 100%)",
+            WebkitMaskImage: "radial-gradient(ellipse 80% 70% at 50% 0%, black 40%, transparent 100%)",
+          }}
+        />
 
-        {/* ── Hero — Split Screen ───────────────────────────────────────────── */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-16 sm:pt-24 pb-16 lg:pb-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-
-            {/* Left: Copy */}
-            <div className="space-y-7">
-              {/* Badge */}
-              <div className="badge animate-fade-up">
-                <div className="dot-pulse" />
-                <span>Monetize your 1:1 time · Zero hassle</span>
-              </div>
-
-              {/* Headline */}
-              <h1
-                className="text-4xl sm:text-5xl lg:text-[3.5rem] font-800 leading-[1.08] tracking-[-0.025em] animate-fade-up delay-100"
-              >
-                The smartest way to{" "}
-                <span className="gradient-text">book paid sessions</span>{" "}
-                with your audience
-              </h1>
-
-              {/* Subheading */}
-              <p
-                className="text-base sm:text-lg leading-relaxed max-w-[52ch] animate-fade-up delay-200"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                Create your booking page, set your rates and availability, and
-                start earning in minutes. We handle scheduling, calendar invites,
-                and Razorpay payments.{" "}
-                <span className="text-emerald-400 font-600">You keep 96%.</span>
-              </p>
-
-              {/* CTAs */}
-              <div className="flex flex-col sm:flex-row gap-3 animate-fade-up delay-300">
-                <Link href="/signup" className="btn-primary btn-emerald text-sm">
-                  Create Your Booking Page
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link href="/login" className="btn-primary btn-ghost text-sm">
-                  Creator Login
-                </Link>
-              </div>
-
-              {/* Trust badges */}
-              <div
-                className="flex flex-wrap gap-5 animate-fade-up delay-400 pt-2"
-                style={{ color: "var(--text-muted)" }}
-              >
-                {[
-                  { icon: ShieldCheck, label: "Razorpay Verified", color: "#10b981" },
-                  { icon: Clock, label: "Real-Time Slots", color: "#6366f1" },
-                  { icon: Zap, label: "Instant Setup", color: "#f59e0b" },
-                ].map(({ icon: Icon, label, color }) => (
-                  <div key={label} className="flex items-center gap-1.5 text-xs font-600">
-                    <Icon className="w-4 h-4" style={{ color }} />
-                    <span>{label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right: Floating booking widget */}
-            <div className="relative flex items-center justify-center animate-slide-right delay-200 lg:pl-8">
-              <HeroBookingCard />
+        <div className="relative max-w-6xl mx-auto px-4">
+          {/* Top badge */}
+          <div className="flex justify-center mb-8">
+            <div className="badge animate-fade-up">
+              🇮🇳 Built for Indian Creators
             </div>
           </div>
-        </section>
 
-        {/* ── Stats Strip ──────────────────────────────────────────────────────── */}
-        <section
-          className="border-y relative z-10"
-          style={{ borderColor: "rgba(255,255,255,0.06)" }}
-        >
-          <div
-            className="max-w-7xl mx-auto px-4 sm:px-6 py-10"
-            style={{
-              background:
-                "linear-gradient(180deg, rgba(99,102,241,0.04) 0%, transparent 100%)",
-            }}
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x"
-              style={{ borderColor: "rgba(255,255,255,0.07)" }}
+          {/* Editorial headline */}
+          <div className="text-center max-w-4xl mx-auto animate-fade-up delay-75">
+            <h1
+              className="font-900 tracking-tight leading-none"
+              style={{ fontSize: "clamp(2.8rem, 7vw, 5.5rem)", color: "var(--text-primary)" }}
             >
-              {[
-                { value: "2,400+", label: "Sessions Booked", icon: CheckCircle2, color: "#6366f1" },
-                { value: "₹1.2 Cr+", label: "Paid to Creators", icon: TrendingUp, color: "#10b981" },
-                { value: "4.9 / 5.0", label: "Average Rating", icon: Star, color: "#f59e0b" },
-              ].map(({ value, label, icon: Icon, color }, i) => (
+              Turn your expertise
+              <br />
+              <span style={{ color: "var(--orange)" }}>into income.</span>
+            </h1>
+            <p
+              className="mt-5 font-400 max-w-xl mx-auto text-lg"
+              style={{ color: "var(--text-muted)" }}
+            >
+              List your 1:1 sessions. Set your price. Share one link.
+              Clients book and pay instantly — you keep{" "}
+              <strong style={{ color: "var(--text-primary)", fontWeight: 700 }}>96%</strong>.
+            </p>
+          </div>
+
+          {/* URL claim input */}
+          <div className="flex justify-center mt-10 animate-fade-up delay-150">
+            <div
+              className="flex items-center gap-0 rounded-xl overflow-hidden shadow-lg border w-full max-w-lg"
+              style={{ borderColor: "var(--border-base)" }}
+            >
+              <div
+                className="px-4 py-3.5 text-sm font-500 border-r flex-shrink-0"
+                style={{
+                  background: "var(--bg-muted)",
+                  color: "var(--text-muted)",
+                  borderColor: "var(--border-base)",
+                  fontFamily: "monospace",
+                }}
+              >
+                sessionbook.in/u/
+              </div>
+              <input
+                type="text"
+                placeholder="yourname"
+                className="flex-1 px-4 py-3.5 text-sm font-500 outline-none"
+                style={{
+                  background: "var(--bg-page)",
+                  color: "var(--text-primary)",
+                  fontFamily: "monospace",
+                }}
+              />
+              <Link
+                href="/signup"
+                className="flex-shrink-0 px-5 py-3.5 font-600 text-sm text-white transition-all"
+                style={{ background: "var(--orange)" }}
+              >
+                Claim →
+              </Link>
+            </div>
+          </div>
+
+          <p className="text-center mt-3 text-xs animate-fade-up delay-200" style={{ color: "var(--text-muted)" }}>
+            Free to start · No card needed · Live in minutes
+          </p>
+
+          {/* Product preview */}
+          <div className="relative mt-16 flex justify-center animate-fade-up delay-300">
+            <div
+              className="w-full max-w-4xl rounded-t-2xl border border-b-0 overflow-hidden shadow-xl"
+              style={{ borderColor: "var(--border-base)" }}
+            >
+              {/* Browser chrome */}
+              <div
+                className="flex items-center gap-2 px-4 py-3 border-b"
+                style={{ background: "var(--bg-muted)", borderColor: "var(--border-base)" }}
+              >
+                <div className="flex gap-1.5">
+                  {["#FC5753", "#FEBC2E", "#27C840"].map((c) => (
+                    <div key={c} className="w-3 h-3 rounded-full" style={{ background: c }} />
+                  ))}
+                </div>
                 <div
-                  key={label}
-                  className={`flex items-center gap-4 py-6 sm:py-0 sm:px-10 animate-fade-up`}
-                  style={{ animationDelay: `${i * 120}ms` }}
+                  className="flex-1 mx-4 px-3 py-1 rounded-md text-xs font-mono"
+                  style={{ background: "var(--bg-page)", color: "var(--text-muted)", border: "1px solid var(--border-base)" }}
+                >
+                  sessionbook.in/u/alex
+                </div>
+              </div>
+
+              {/* Fake dashboard preview */}
+              <div
+                className="p-6 grid grid-cols-3 gap-4"
+                style={{ background: "var(--bg-subtle)" }}
+              >
+                {/* Sidebar preview */}
+                <div
+                  className="card p-4 space-y-3"
+                  style={{ background: "var(--bg-page)" }}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-800"
+                      style={{ background: "var(--orange)" }}>A</div>
+                    <div>
+                      <div className="text-xs font-700" style={{ color: "var(--text-primary)" }}>Alex Rivers</div>
+                      <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>@alex</div>
+                    </div>
+                  </div>
+                  {["Home", "Bookings", "Sessions", "Calendar", "Payouts"].map((item, i) => (
+                    <div
+                      key={item}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-500"
+                      style={i === 0 ? {
+                        background: "var(--orange-light)",
+                        color: "var(--orange-text)",
+                        borderLeft: "2px solid var(--orange)",
+                      } : { color: "var(--text-muted)" }}
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: i === 0 ? "var(--orange)" : "var(--border-strong)" }} />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Main content preview */}
+                <div className="col-span-2 space-y-3">
+                  <div className="text-sm font-800" style={{ color: "var(--text-primary)" }}>
+                    Hi, Alex 👋
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: "Sessions", val: "14" },
+                      { label: "Upcoming", val: "3" },
+                      { label: "Earnings", val: "₹8.4k" },
+                    ].map((m) => (
+                      <div key={m.label} className="card p-3">
+                        <div className="text-lg font-800" style={{ color: "var(--text-primary)" }}>{m.val}</div>
+                        <div className="text-[10px] font-500" style={{ color: "var(--text-muted)" }}>{m.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="card p-4">
+                    <div className="text-xs font-700 mb-2.5" style={{ color: "var(--text-primary)" }}>Recent Bookings</div>
+                    {[
+                      { name: "Priya Kapoor", session: "1:1 Consultation", price: "₹1,500" },
+                      { name: "Raj Patel", session: "Code Review", price: "₹2,500" },
+                    ].map((b) => (
+                      <div key={b.name} className="flex items-center justify-between py-1.5 border-t text-xs"
+                        style={{ borderColor: "var(--border-base)" }}>
+                        <span className="font-600" style={{ color: "var(--text-primary)" }}>{b.name}</span>
+                        <span style={{ color: "var(--text-muted)" }}>{b.session}</span>
+                        <span className="font-700" style={{ color: "var(--green)" }}>{b.price}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Marquee ─────────────────────────────────────────────────── */}
+      <section
+        className="py-5 border-y overflow-hidden"
+        style={{ borderColor: "var(--border-base)", background: "var(--bg-subtle)" }}
+      >
+        <div className="marquee-container">
+          <div className="marquee-track">
+            {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
+              <span
+                key={i}
+                className="flex items-center gap-3 px-6 text-sm font-500 whitespace-nowrap"
+                style={{ color: "var(--text-muted)" }}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                  style={{ background: "var(--orange)" }}
+                />
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stats ───────────────────────────────────────────────────── */}
+      <section className="py-16 border-b" style={{ borderColor: "var(--border-base)" }}>
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-px border rounded-2xl overflow-hidden"
+            style={{ borderColor: "var(--border-base)", background: "var(--border-base)" }}>
+            {[
+              { value: "₹1.2Cr+", label: "Paid out to creators", sub: "Across all sessions" },
+              { value: "2,400+", label: "Sessions completed", sub: "And counting" },
+              { value: "96%", label: "Creator payout rate", sub: "We take just 4%" },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="p-8 md:p-10 text-center"
+                style={{ background: "var(--bg-page)" }}
+              >
+                <div
+                  className="text-4xl md:text-5xl font-900 tracking-tight mb-1"
+                  style={{ color: "var(--orange)" }}
+                >
+                  {stat.value}
+                </div>
+                <div className="font-700 text-sm" style={{ color: "var(--text-primary)" }}>
+                  {stat.label}
+                </div>
+                <div className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                  {stat.sub}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Features ────────────────────────────────────────────────── */}
+      <section id="features" className="py-20 border-b" style={{ borderColor: "var(--border-base)" }}>
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-14">
+            <div className="section-label justify-center">What you get</div>
+            <h2 className="text-3xl md:text-4xl font-900 tracking-tight">
+              Everything a creator needs.<br />
+              <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>Nothing they don't.</span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {FEATURES.map((f, i) => {
+              const Icon = f.icon;
+              return (
+                <div
+                  key={f.title}
+                  className="card p-7 flex gap-5 animate-fade-up group"
+                  style={{ animationDelay: `${i * 80}ms` }}
                 >
                   <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{
-                      background: `${color}18`,
-                      border: `1px solid ${color}30`,
-                    }}
+                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: f.bg, color: f.color }}
                   >
-                    <Icon className="w-5 h-5" style={{ color }} />
+                    <Icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-2xl font-800 text-white leading-tight">
-                      {value}
-                    </p>
-                    <p className="text-xs font-500" style={{ color: "var(--text-muted)" }}>
-                      {label}
+                    <h3 className="font-700 text-base mb-1.5" style={{ color: "var(--text-primary)" }}>
+                      {f.title}
+                    </h3>
+                    <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                      {f.desc}
                     </p>
                   </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── How it works ────────────────────────────────────────────── */}
+      <section
+        id="how-it-works"
+        className="py-20 border-b"
+        style={{ background: "var(--bg-subtle)", borderColor: "var(--border-base)" }}
+      >
+        <div className="max-w-5xl mx-auto px-4">
+          <div className="text-center mb-14">
+            <div className="section-label justify-center">How it works</div>
+            <h2 className="text-3xl md:text-4xl font-900 tracking-tight">
+              From signup to first booking
+              <br />
+              <span style={{ color: "var(--orange)" }}>in under 10 minutes.</span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {STEPS.map((step, i) => (
+              <div key={step.num} className="card p-6 animate-fade-up" style={{ animationDelay: `${i * 80}ms` }}>
+                <div
+                  className="text-4xl font-900 tracking-tighter mb-4 leading-none"
+                  style={{ color: "var(--orange)", opacity: 0.25 }}
+                >
+                  {step.num}
+                </div>
+                <h3 className="font-700 text-sm mb-2" style={{ color: "var(--text-primary)" }}>
+                  {step.title}
+                </h3>
+                <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                  {step.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Pricing ─────────────────────────────────────────────────── */}
+      <section id="pricing" className="py-20 border-b" style={{ borderColor: "var(--border-base)" }}>
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <div className="section-label justify-center">Pricing</div>
+          <h2 className="text-3xl md:text-4xl font-900 tracking-tight mt-2 mb-4">
+            One rule. No fine print.
+          </h2>
+          <p className="text-base mb-10" style={{ color: "var(--text-muted)" }}>
+            We take 4% only when you earn. No monthly fees, no setup cost, no hidden charges.
+          </p>
+
+          <div className="card p-8 md:p-10 text-left max-w-xl mx-auto">
+            {/* Split bar */}
+            <div className="mb-8">
+              <div className="flex items-end justify-between mb-2">
+                <span className="text-sm font-600" style={{ color: "var(--text-muted)" }}>You receive</span>
+                <span className="text-5xl font-900 tracking-tighter" style={{ color: "var(--green)" }}>96%</span>
+              </div>
+              <div className="w-full h-4 rounded-full overflow-hidden" style={{ background: "var(--bg-muted)" }}>
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{ width: "96%", background: "linear-gradient(90deg, #16A34A, #22C55E)" }}
+                />
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-xs" style={{ color: "var(--text-muted)" }}>Creator payout</span>
+                <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                  Platform: <strong style={{ color: "var(--text-secondary)" }}>4%</strong>
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-3 border-t pt-6" style={{ borderColor: "var(--border-base)" }}>
+              {[
+                "Zero monthly fees — ever",
+                "Instant Razorpay settlements",
+                "Unlimited session types",
+                "Unlimited bookings",
+                "Custom booking page URL",
+                "Automated .ics invites",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-3 text-sm" style={{ color: "var(--text-secondary)" }}>
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: "var(--green)" }} />
+                  {item}
                 </div>
               ))}
             </div>
+
+            <Link href="/signup" className="btn btn-primary w-full justify-center mt-8 py-3.5">
+              Start for free
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ── How It Works ─────────────────────────────────────────────────────── */}
-        <section id="how-it-works" className="max-w-7xl mx-auto px-4 sm:px-6 py-24">
-          {/* Section label */}
-          <div className="mb-14 max-w-xl">
-            <p className="badge mb-4">How It Works</p>
-            <h2 className="text-3xl sm:text-4xl font-800 tracking-tight leading-tight text-white">
-              Live and earning in{" "}
-              <span className="gradient-text-teal">under 10 minutes</span>
-            </h2>
-            <p className="mt-3 text-sm sm:text-base" style={{ color: "var(--text-muted)" }}>
-              No technical setup, no contracts. Just a clean booking page and a Razorpay account.
-            </p>
-          </div>
-
-          {/* Steps — asymmetric 2-col on desktop */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {STEPS.map((step, i) => (
-              <div
-                key={step.num}
-                className="glass-card p-7 flex gap-5 animate-fade-up"
-                style={{ animationDelay: `${i * 100}ms` }}
-              >
-                <div className="step-num flex-shrink-0">{step.num}</div>
-                <div>
-                  <h3 className="font-700 text-white text-base mb-1.5">
-                    {step.title}
-                  </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
-                    {step.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Features Grid ────────────────────────────────────────────────────── */}
-        <section
-          id="features"
-          className="max-w-7xl mx-auto px-4 sm:px-6 py-12 pb-24"
-        >
-          <div className="mb-14">
-            <p className="badge mb-4">Features</p>
-            <h2 className="text-3xl sm:text-4xl font-800 tracking-tight leading-tight text-white max-w-xl">
-              Everything to run your{" "}
-              <span className="gradient-text">consultation business</span>
-            </h2>
-            <p className="mt-3 text-sm sm:text-base max-w-lg" style={{ color: "var(--text-muted)" }}>
-              Built for mentors, developers, startup founders, advisors, and creators.
-            </p>
-          </div>
-
-          {/* Asymmetric grid: large card spans 2 cols */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Large featured card first */}
-            <FeatureCard feature={FEATURES[0]} index={0} />
-
-            {/* Remaining 5 small cards */}
-            {FEATURES.slice(1).map((f, i) => (
-              <FeatureCard key={f.title} feature={f} index={i + 1} />
-            ))}
-          </div>
-        </section>
-
-        {/* ── Pricing ──────────────────────────────────────────────────────────── */}
-        <section
-          id="pricing"
-          className="py-24 relative"
-          style={{
-            background:
-              "linear-gradient(180deg, transparent, rgba(99,102,241,0.04) 30%, rgba(16,185,129,0.03) 70%, transparent)",
-          }}
-        >
-          <div className="max-w-4xl mx-auto px-4 sm:px-6">
-            <div className="text-center mb-14">
-              <p className="badge mx-auto mb-4 w-fit">Pricing</p>
-              <h2 className="text-3xl sm:text-4xl font-800 tracking-tight text-white">
-                Simple. Transparent. Creator-first.
-              </h2>
-              <p className="mt-3 text-sm sm:text-base max-w-lg mx-auto" style={{ color: "var(--text-muted)" }}>
-                No monthly subscriptions, no hidden charges. Only pay when you earn.
-              </p>
-            </div>
-
-            {/* Pricing card */}
-            <div className="gradient-border animate-fade-up">
-              <div
-                className="glass-card rounded-2xl p-8 sm:p-12"
-                style={{ borderColor: "transparent" }}
-              >
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10">
-                  {/* Platform fee */}
-                  <div
-                    className="p-6 rounded-2xl text-center"
-                    style={{
-                      background: "rgba(99,102,241,0.07)",
-                      border: "1px solid rgba(99,102,241,0.15)",
-                    }}
-                  >
-                    <p
-                      className="text-xs font-700 uppercase tracking-widest mb-3"
-                      style={{ color: "var(--text-muted)" }}
-                    >
-                      Platform Commission
-                    </p>
-                    <p className="text-6xl font-800 text-white leading-none mb-1">
-                      4<span className="text-3xl text-slate-400">%</span>
-                    </p>
-                    <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>
-                      Per successful booking only
-                    </p>
-                    <div
-                      className="mt-4 pt-4 flex flex-col gap-1.5 text-xs text-left"
-                      style={{
-                        borderTop: "1px solid rgba(255,255,255,0.06)",
-                        color: "var(--text-muted)",
-                      }}
-                    >
-                      {["No monthly fee", "No setup charge", "No cancellation fee"].map(
-                        (item) => (
-                          <div key={item} className="flex items-center gap-2">
-                            <CheckCircle2
-                              className="w-3.5 h-3.5 flex-shrink-0"
-                              style={{ color: "#6366f1" }}
-                            />
-                            {item}
-                          </div>
-                        )
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Creator payout */}
-                  <div
-                    className="p-6 rounded-2xl text-center"
-                    style={{
-                      background: "rgba(16,185,129,0.07)",
-                      border: "1px solid rgba(16,185,129,0.15)",
-                    }}
-                  >
-                    <p
-                      className="text-xs font-700 uppercase tracking-widest mb-3"
-                      style={{ color: "var(--text-muted)" }}
-                    >
-                      Creator Payout
-                    </p>
-                    <p className="text-6xl font-800 leading-none mb-1 text-emerald-400">
-                      96<span className="text-3xl" style={{ color: "#6ee7b7" }}>%</span>
-                    </p>
-                    <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>
-                      Direct to UPI / Bank account
-                    </p>
-                    <div
-                      className="mt-4 pt-4 flex flex-col gap-1.5 text-xs text-left"
-                      style={{
-                        borderTop: "1px solid rgba(255,255,255,0.06)",
-                        color: "var(--text-muted)",
-                      }}
-                    >
-                      {[
-                        "Instant transfer confirmation",
-                        "UPI, NEFT, IMPS supported",
-                        "₹0 minimum withdrawal",
-                      ].map((item) => (
-                        <div key={item} className="flex items-center gap-2">
-                          <CheckCircle2
-                            className="w-3.5 h-3.5 flex-shrink-0"
-                            style={{ color: "#10b981" }}
-                          />
-                          {item}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Example calculation */}
-                <div
-                  className="mt-8 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-                  style={{
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                  }}
-                >
-                  <div>
-                    <p className="text-xs font-700 uppercase tracking-wider mb-0.5" style={{ color: "var(--text-muted)" }}>
-                      Example
-                    </p>
-                    <p className="text-sm text-white font-600">
-                      You charge ₹5,000 per session → You receive{" "}
-                      <span className="text-emerald-400">₹4,800</span>
-                    </p>
-                  </div>
-                  <Link href="/signup" className="btn-primary btn-emerald text-sm flex-shrink-0">
-                    Start Earning
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Testimonials ─────────────────────────────────────────────────────── */}
-        <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 overflow-hidden">
-          <div className="mb-12">
-            <p className="badge mb-4">Testimonials</p>
-            <h2 className="text-3xl sm:text-4xl font-800 tracking-tight text-white">
-              Loved by creators across India
+      {/* ── Testimonials ────────────────────────────────────────────── */}
+      <section
+        className="py-20 border-b"
+        style={{ background: "var(--bg-subtle)", borderColor: "var(--border-base)" }}
+      >
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="section-label justify-center">Creator stories</div>
+            <h2 className="text-3xl font-900 tracking-tight mt-2">
+              Real people. Real earnings.
             </h2>
           </div>
 
-          {/* Cards grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {TESTIMONIALS.map((t, i) => (
               <div
                 key={t.name}
-                className="glass-card p-6 flex flex-col gap-5 animate-fade-up"
-                style={{ animationDelay: `${i * 100}ms` }}
+                className="card p-7 space-y-5 animate-fade-up"
+                style={{ animationDelay: `${i * 80}ms` }}
               >
-                {/* Stars */}
-                <div className="flex gap-0.5">
-                  {Array.from({ length: t.rating }).map((_, j) => (
-                    <Star
-                      key={j}
-                      className="w-4 h-4 fill-amber-400 text-amber-400"
-                    />
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, j) => (
+                    <Star key={j} className="w-3.5 h-3.5 fill-current" style={{ color: "var(--orange)" }} />
                   ))}
                 </div>
-
-                {/* Quote */}
-                <p
-                  className="text-sm leading-relaxed flex-1 italic"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  &ldquo;{t.quote}&rdquo;
+                <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                  "{t.text}"
                 </p>
-
-                {/* Author */}
-                <div className="flex items-center gap-3 pt-2"
-                  style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
-                >
+                <div className="flex items-center gap-3 pt-2 border-t" style={{ borderColor: "var(--border-base)" }}>
                   <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-700 text-white flex-shrink-0"
-                    style={{
-                      background: `linear-gradient(135deg, ${
-                        i === 0 ? "#6366f1" : i === 1 ? "#0f766e" : "#f59e0b"
-                      }, ${
-                        i === 0 ? "#4f46e5" : i === 1 ? "#134e4a" : "#d97706"
-                      })`,
-                    }}
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-800 text-white flex-shrink-0"
+                    style={{ background: "var(--orange)" }}
                   >
                     {t.avatar}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-700 text-white leading-tight">{t.name}</p>
+                  <div>
+                    <p className="text-sm font-700" style={{ color: "var(--text-primary)" }}>{t.name}</p>
                     <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                      {t.role}
+                      {t.role} · {t.sessions} sessions
                     </p>
                   </div>
-                  <span
-                    className="text-xs font-600 px-2 py-1 rounded-lg flex-shrink-0"
-                    style={{
-                      background: "rgba(16,185,129,0.1)",
-                      color: "#10b981",
-                      border: "1px solid rgba(16,185,129,0.2)",
-                    }}
-                  >
-                    {t.earnings}
-                  </span>
                 </div>
               </div>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ── CTA Band ─────────────────────────────────────────────────────────── */}
-        <section className="relative py-24 overflow-hidden">
-          {/* Band background */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(15,118,110,0.08) 50%, rgba(99,102,241,0.06) 100%)",
-            }}
-          />
-          <div
-            className="absolute inset-x-0 top-0 h-px"
-            style={{
-              background:
-                "linear-gradient(90deg, transparent, rgba(99,102,241,0.5), rgba(16,185,129,0.4), transparent)",
-            }}
-          />
-          <div
-            className="absolute inset-x-0 bottom-0 h-px"
-            style={{
-              background:
-                "linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent)",
-            }}
-          />
-
-          <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
-            <div
-              className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full text-xs font-700 uppercase tracking-widest"
-              style={{
-                background: "rgba(16,185,129,0.12)",
-                border: "1px solid rgba(16,185,129,0.25)",
-                color: "#10b981",
-              }}
-            >
-              <Users className="w-3.5 h-3.5" />
-              Join 500+ active creators
-            </div>
-
-            <h2 className="text-4xl sm:text-5xl font-800 tracking-tight text-white leading-tight mb-5">
-              Ready to get paid for{" "}
-              <span className="gradient-text">your expertise?</span>
-            </h2>
-
-            <p
-              className="text-base sm:text-lg mb-8 max-w-xl mx-auto leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              Create your page for free. No card required. Start accepting bookings
-              in the next 10 minutes.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/signup" className="btn-primary btn-emerald text-base py-4 px-8">
-                Create Your Free Page
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-              <Link href="/login" className="btn-primary btn-ghost text-base py-4 px-8">
-                <Mail className="w-5 h-5" />
-                Sign In
-              </Link>
-            </div>
-
-            <p className="mt-6 text-xs" style={{ color: "var(--text-muted)" }}>
-              No monthly fees · 96% payout · Cancel anytime
-            </p>
-          </div>
-        </section>
-      </main>
-
-      {/* ── Footer ────────────────────────────────────────────────────────────── */}
-      <footer
-        className="relative z-10 border-t py-10"
-        style={{ borderColor: "rgba(255,255,255,0.06)" }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-6">
-          {/* Brand */}
-          <div className="flex items-center gap-2">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{
-                background: "linear-gradient(135deg, #6366f1, #0f766e)",
-              }}
-            >
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-700 text-white text-sm">SessionBook</span>
-            <span className="text-xs ml-2" style={{ color: "var(--text-muted)" }}>
-              © 2026
-            </span>
-          </div>
-
-          {/* Links */}
-          <nav className="flex items-center gap-6 text-xs font-600" style={{ color: "var(--text-muted)" }}>
-            <Link href="/login" className="hover:text-white transition-colors">
-              Sign In
-            </Link>
-            <span style={{ color: "var(--text-faint)" }}>·</span>
-            <Link href="/signup" className="hover:text-white transition-colors">
-              Sign Up
-            </Link>
-            <span style={{ color: "var(--text-faint)" }}>·</span>
-            <Link href="/admin" className="hover:text-white transition-colors">
-              Admin Portal
-            </Link>
-          </nav>
-
-          {/* Tagline */}
-          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-            Built for creators · Powered by Razorpay
+      {/* ── CTA ─────────────────────────────────────────────────────── */}
+      <section className="py-20">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <h2 className="text-4xl md:text-5xl font-900 tracking-tight mb-4">
+            Your expertise has value.
+            <br />
+            <span style={{ color: "var(--orange)" }}>Start charging for it.</span>
+          </h2>
+          <p className="text-base mb-8" style={{ color: "var(--text-muted)" }}>
+            Join thousands of creators earning from their 1:1 time. Free forever to start.
           </p>
+          <Link href="/signup" className="btn btn-primary text-base px-8 py-4 mx-auto">
+            Create your booking page
+            <ArrowRight className="w-5 h-5" />
+          </Link>
+          <p className="mt-4 text-xs" style={{ color: "var(--text-muted)" }}>
+            No credit card required · Live in 10 minutes
+          </p>
+        </div>
+      </section>
+
+      {/* ── Footer ──────────────────────────────────────────────────── */}
+      <footer
+        className="border-t py-10"
+        style={{ borderColor: "var(--border-base)", background: "var(--bg-subtle)" }}
+      >
+        <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2 font-700">
+            <div
+              className="w-6 h-6 rounded-md flex items-center justify-center text-white text-xs font-900"
+              style={{ background: "var(--orange)" }}
+            >
+              S
+            </div>
+            <span style={{ color: "var(--text-primary)" }}>SessionBook</span>
+          </div>
+          <p className="text-xs text-center" style={{ color: "var(--text-muted)" }}>
+            © 2026 SessionBook. Payments secured by Razorpay. Made in India 🇮🇳
+          </p>
+          <div className="flex gap-4 text-xs" style={{ color: "var(--text-muted)" }}>
+            <a href="#" className="hover:underline">Privacy</a>
+            <a href="#" className="hover:underline">Terms</a>
+            <Link href="/login" className="hover:underline">Login</Link>
+          </div>
         </div>
       </footer>
     </div>
