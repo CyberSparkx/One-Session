@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { SessionProvider } from "@/components/SessionProvider";
 
@@ -20,12 +21,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full bg-slate-950 text-slate-100">
-      <body className={`${inter.className} min-h-screen antialiased bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white`}>
+    <html lang="en" className="h-full bg-slate-950 text-slate-100" suppressHydrationWarning>
+      <body
+        className={`${inter.className} min-h-screen antialiased bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white`}
+        suppressHydrationWarning
+      >
         <SessionProvider>
           {children}
         </SessionProvider>
-        <script src="https://checkout.razorpay.com/v1/checkout.js" async />
+        <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );
