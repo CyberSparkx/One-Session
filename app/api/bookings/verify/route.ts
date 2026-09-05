@@ -10,8 +10,8 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { bookingId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = body;
 
-    if (!bookingId) {
-      return NextResponse.json({ error: "Missing bookingId" }, { status: 400 });
+    if (!bookingId || !/^[0-9a-fA-F]{24}$/.test(bookingId)) {
+      return NextResponse.json({ error: "Invalid or missing bookingId" }, { status: 400 });
     }
 
     const booking = await prisma.booking.findUnique({

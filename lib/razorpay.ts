@@ -30,10 +30,14 @@ export function verifyWebhookSignature(
     .update(rawBody)
     .digest("hex");
 
-  return crypto.timingSafeEqual(
-    Buffer.from(expectedSignature),
-    Buffer.from(signature)
-  );
+  const expectedBuf = Buffer.from(expectedSignature);
+  const sigBuf = Buffer.from(signature);
+
+  if (expectedBuf.length !== sigBuf.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(expectedBuf, sigBuf);
 }
 
 /**
