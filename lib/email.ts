@@ -3,7 +3,7 @@ import { format } from "date-fns";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const resend = resendApiKey && !resendApiKey.startsWith("re_yourResend") ? new Resend(resendApiKey) : null;
-const fromEmail = process.env.EMAIL_FROM || "SessionBook <notifications@sessionbook.com>";
+const fromEmail = process.env.EMAIL_FROM || "SessionBook <onboarding@resend.dev>";
 
 export interface BookingEmailData {
   bookingId: string;
@@ -91,7 +91,6 @@ export async function sendBookingConfirmationEmail(data: BookingEmailData) {
 
   const icsBase64 = Buffer.from(ics).toString("base64");
 
-  // In local test mode without Resend API Key, log formatted preview
   if (!resend) {
     console.log("-----------------------------------------");
     console.log(`[EMAIL DISPATCH SIMULATION (Resend not configured)]`);
@@ -105,65 +104,100 @@ export async function sendBookingConfirmationEmail(data: BookingEmailData) {
     return;
   }
 
-  // 1. Email to Client
-  await resend.emails.send({
-    from: fromEmail,
-    to: data.clientEmail,
-    subject: `Confirmed: 1:1 Session with ${data.creatorName}`,
-    html: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
-        <h2 style="color: #4f46e5;">Your 1:1 session is confirmed!</h2>
-        <p>Hi ${data.clientName},</p>
-        <p>Your session with <strong>${data.creatorName}</strong> has been successfully booked.</p>
-        
-        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 20px 0;">
-          <p style="margin: 4px 0;"><strong>Session:</strong> ${data.sessionTitle}</p>
-          <p style="margin: 4px 0;"><strong>Date:</strong> ${formattedDate}</p>
-          <p style="margin: 4px 0;"><strong>Time:</strong> ${formattedTime}</p>
-          <p style="margin: 4px 0;"><strong>Amount Paid:</strong> ₹${priceRupees}</p>
-        </div>
+  // 1. Email to Client (with fallback to creator email if using Resend unverified test domain)
+  try {
+    const clientRes = await resend.emails.send({
+      from: fromEmail,
+      to: data.clientEmail,
+      subject: `Confirmed: 1:1 Session with ${data.creatorName}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
+          <h2 style="color: #4f46e5;">Your 1:1 session is confirmed!</h2>
+          <p>Hi ${data.clientName},</p>
+          <p>Your session with <strong>${data.creatorName}</strong> has been successfully booked.</p>
+          
+          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 20px 0;">
+            <p style="margin: 4px 0;"><strong>Session:</strong> ${data.sessionTitle}</p>
+            <p style="margin: 4px 0;"><strong>Date:</strong> ${formattedDate}</p>
+            <p style="margin: 4px 0;"><strong>Time:</strong> ${formattedTime}</p>
+            <p style="margin: 4px 0;"><strong>Amount Paid:</strong> ₹${priceRupees}</p>
+          </div>
 
-        <p>A calendar invitation (.ics) is attached to this email so you can add it directly to Google Calendar or Apple Calendar.</p>
-        <p style="color: #64748b; font-size: 13px; margin-top: 30px;">Best regards,<br/>SessionBook Team</p>
-      </div>
-    `,
-    attachments: [
-      {
-        filename: "session-invite.ics",
-        content: icsBase64,
-      },
-    ],
-  });
+          <p>A calendar invitation (.ics) is attached to this email so you can add it directly to Google Calendar or Apple Calendar.</p>
+          <p style="color: #64748b; font-size: 13px; margin-top: 30px;">Best regards,<br/>SessionBook Team</p>
+        </div>
+      `,
+      attachments: [
+        {
+          filename: "session-invite.ics",
+          content: icsBase64,
+        },
+      ],
+    });
+
+    // If Resend blocked because recipient is not the account owner (free test domain limitation)
+    if (clientRes.error && clientRes.error.message.includes("only send testing emails")) {
+      console.warn(`Resend Test limitation: Delivering client copy to creator (${data.creatorEmail})`);
+      await resend.emails.send({
+        from: fromEmail,
+        to: data.creatorEmail,
+        subject: `[Client Copy Preview] Confirmed: 1:1 Session with ${data.creatorName}`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
+            <div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 12px; color: #92400e;">
+              <strong>Resend Test Mode Note:</strong> This is a copy of the email intended for <strong>${data.clientEmail}</strong> (Resend test mode delivers to your registered account).
+            </div>
+            <h2 style="color: #4f46e5;">Your 1:1 session is confirmed!</h2>
+            <p>Hi ${data.clientName},</p>
+            <p>Your session with <strong>${data.creatorName}</strong> has been successfully booked.</p>
+            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 20px 0;">
+              <p style="margin: 4px 0;"><strong>Session:</strong> ${data.sessionTitle}</p>
+              <p style="margin: 4px 0;"><strong>Date:</strong> ${formattedDate}</p>
+              <p style="margin: 4px 0;"><strong>Time:</strong> ${formattedTime}</p>
+              <p style="margin: 4px 0;"><strong>Amount Paid:</strong> ₹${priceRupees}</p>
+            </div>
+          </div>
+        `,
+        attachments: [{ filename: "session-invite.ics", content: icsBase64 }],
+      });
+    }
+  } catch (err) {
+    console.error("Failed to send client email via Resend:", err);
+  }
 
   // 2. Email to Creator
-  await resend.emails.send({
-    from: fromEmail,
-    to: data.creatorEmail,
-    subject: `New Booking: ${data.clientName} booked ${data.sessionTitle}`,
-    html: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
-        <h2 style="color: #4f46e5;">You have a new booking!</h2>
-        <p>Hi ${data.creatorName},</p>
-        <p><strong>${data.clientName}</strong> has booked a 1:1 session with you.</p>
-        
-        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 20px 0;">
-          <p style="margin: 4px 0;"><strong>Session:</strong> ${data.sessionTitle}</p>
-          <p style="margin: 4px 0;"><strong>Date:</strong> ${formattedDate}</p>
-          <p style="margin: 4px 0;"><strong>Time:</strong> ${formattedTime} (${data.creatorTimezone})</p>
-          <p style="margin: 4px 0;"><strong>Client Email:</strong> ${data.clientEmail}</p>
-          <p style="margin: 4px 0;"><strong>Your Payout (96%):</strong> ₹${creatorPayoutRupees}</p>
-          <p style="margin: 4px 0; color: #64748b; font-size: 12px;">(Platform retained 4% fee)</p>
-        </div>
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: data.creatorEmail,
+      subject: `New Booking: ${data.clientName} booked ${data.sessionTitle}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
+          <h2 style="color: #4f46e5;">You have a new booking!</h2>
+          <p>Hi ${data.creatorName},</p>
+          <p><strong>${data.clientName}</strong> has booked a 1:1 session with you.</p>
+          
+          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 20px 0;">
+            <p style="margin: 4px 0;"><strong>Session:</strong> ${data.sessionTitle}</p>
+            <p style="margin: 4px 0;"><strong>Date:</strong> ${formattedDate}</p>
+            <p style="margin: 4px 0;"><strong>Time:</strong> ${formattedTime} (${data.creatorTimezone})</p>
+            <p style="margin: 4px 0;"><strong>Client Email:</strong> ${data.clientEmail}</p>
+            <p style="margin: 4px 0;"><strong>Your Payout (96%):</strong> ₹${creatorPayoutRupees}</p>
+            <p style="margin: 4px 0; color: #64748b; font-size: 12px;">(Platform retained 4% fee)</p>
+          </div>
 
-        <p>The calendar invitation is attached. Manage your bookings anytime from your creator dashboard.</p>
-        <p style="color: #64748b; font-size: 13px; margin-top: 30px;">Best regards,<br/>SessionBook Team</p>
-      </div>
-    `,
-    attachments: [
-      {
-        filename: "session-invite.ics",
-        content: icsBase64,
-      },
-    ],
-  });
+          <p>The calendar invitation (.ics) is attached. Manage your bookings anytime from your creator dashboard.</p>
+          <p style="color: #64748b; font-size: 13px; margin-top: 30px;">Best regards,<br/>SessionBook Team</p>
+        </div>
+      `,
+      attachments: [
+        {
+          filename: "session-invite.ics",
+          content: icsBase64,
+        },
+      ],
+    });
+  } catch (err) {
+    console.error("Failed to send creator email via Resend:", err);
+  }
 }

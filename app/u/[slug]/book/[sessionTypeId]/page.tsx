@@ -120,8 +120,8 @@ export default function BookingPage({
     loadSlots();
   }, [selectedDate, slug, sessionTypeId]);
 
-  // Generate 7 days view based on calendarOffset
-  const daysToShow = Array.from({ length: 7 }, (_, i) =>
+  // Generate 14 days view (2 full weeks)
+  const daysToShow = Array.from({ length: 14 }, (_, i) =>
     addDays(today, calendarOffset * 7 + i)
   );
 
@@ -476,13 +476,26 @@ export default function BookingPage({
                   </div>
                 ) : slots.length === 0 ? (
                   <div className="py-10 px-4 rounded-xl bg-slate-950/40 border border-slate-800/60 text-center">
-                    <Clock className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-                    <p className="text-xs text-slate-400 font-medium">
-                      No available slots on this date.
-                    </p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
-                      Please select another date from the calendar above.
-                    </p>
+                    <Clock className="w-8 h-8 text-amber-400/80 mx-auto mb-2" />
+                    {isToday(selectedDate) ? (
+                      <>
+                        <p className="text-xs text-slate-300 font-medium">
+                          All slots for today ({format(selectedDate, "EEEE")}) have already passed.
+                        </p>
+                        <p className="text-[11px] text-slate-500 mt-1">
+                          Please select tomorrow ({format(addDays(selectedDate, 1), "EEEE, MMM d")}) or next weekend above!
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-xs text-slate-400 font-medium">
+                          No open slots on {format(selectedDate, "EEEE, MMMM d")}.
+                        </p>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          The creator is unavailable on this day. Please select an available day above.
+                        </p>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-64 overflow-y-auto pr-1">

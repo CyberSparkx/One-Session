@@ -17,6 +17,7 @@ import {
   Menu,
   X,
   ShieldAlert,
+  CalendarCheck2,
 } from "lucide-react";
 
 interface DashboardNavProps {
@@ -45,6 +46,7 @@ export default function DashboardNav({ user }: DashboardNavProps) {
 
   const navLinks = [
     { href: "/dashboard", label: "Overview & Bookings", icon: LayoutDashboard },
+    { href: "/dashboard/calendar", label: "Calendar View", icon: CalendarCheck2 },
     { href: "/dashboard/session-types", label: "Session Types", icon: CalendarDays },
     { href: "/dashboard/availability", label: "Weekly Availability", icon: Clock },
     { href: "/dashboard/settings", label: "Profile & Payouts", icon: Settings },

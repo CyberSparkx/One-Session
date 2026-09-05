@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { verifyWebhookSignature } from "@/lib/razorpay";
 import { BookingStatus, PaymentStatus, PayoutStatus } from "@/lib/types";
 import { sendBookingConfirmationEmail } from "@/lib/email";
+import { createGoogleCalendarEvent } from "@/lib/googleCalendar";
 
 export async function POST(req: Request) {
   try {
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
               sessionType: true,
               creator: {
                 include: {
-                  user: { select: { name: true, email: true, timezone: true } },
+                  user: { select: { name: true, email: true, timezone: true, googleAccessToken: true } },
                 },
               },
             },
@@ -93,21 +94,43 @@ export async function POST(req: Request) {
       });
 
       // Send confirmation emails with calendar invite to client and creator
+      const bookingRecord = (paymentRecord as any)?.booking;
+      const creatorUser = bookingRecord?.creator?.user;
+
       try {
         await sendBookingConfirmationEmail({
-          bookingId: paymentRecord.booking.id,
-          sessionTitle: paymentRecord.booking.sessionType.title,
-          scheduledStart: paymentRecord.booking.scheduledStart,
-          scheduledEnd: paymentRecord.booking.scheduledEnd,
-          clientName: paymentRecord.booking.clientName,
-          clientEmail: paymentRecord.booking.clientEmail,
-          creatorName: paymentRecord.booking.creator.user.name,
-          creatorEmail: paymentRecord.booking.creator.user.email,
-          creatorTimezone: paymentRecord.booking.creator.user.timezone,
+          bookingId: bookingRecord.id,
+          sessionTitle: bookingRecord.sessionType.title,
+          scheduledStart: bookingRecord.scheduledStart,
+          scheduledEnd: bookingRecord.scheduledEnd,
+          clientName: bookingRecord.clientName,
+          clientEmail: bookingRecord.clientEmail,
+          creatorName: creatorUser.name,
+          creatorEmail: creatorUser.email,
+          creatorTimezone: creatorUser.timezone,
           priceInPaise: paymentRecord.amountTotalPaise,
         });
       } catch (emailErr) {
         console.error("Failed to send booking emails:", emailErr);
+      }
+
+      // Automatically sync to Google Calendar if creator signed in with Google
+      if (creatorUser?.googleAccessToken) {
+        try {
+          await createGoogleCalendarEvent({
+            accessToken: creatorUser.googleAccessToken,
+            sessionTitle: bookingRecord.sessionType.title,
+            scheduledStart: bookingRecord.scheduledStart,
+            scheduledEnd: bookingRecord.scheduledEnd,
+            clientName: bookingRecord.clientName,
+            clientEmail: bookingRecord.clientEmail,
+            clientPhone: bookingRecord.clientPhone,
+            creatorName: creatorUser.name,
+            creatorEmail: creatorUser.email,
+          });
+        } catch (gcalErr) {
+          console.warn("Google Calendar sync error in webhook:", gcalErr);
+        }
       }
 
       return NextResponse.json({ message: "Booking confirmed successfully" }, { status: 200 });

@@ -52,6 +52,13 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "placeholder_google_client_id",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "placeholder_google_client_secret",
+      authorization: {
+        params: {
+          scope: "openid email profile https://www.googleapis.com/auth/calendar.events",
+          access_type: "offline",
+          prompt: "consent",
+        },
+      },
     }),
   ],
   callbacks: {
@@ -115,6 +122,17 @@ export const authOptions: NextAuthOptions = {
               },
             },
             include: { creatorProfile: true },
+          });
+        }
+
+        // Save or update Google tokens if provided
+        if (account.access_token || account.refresh_token) {
+          await prisma.user.update({
+            where: { id: existingUser.id },
+            data: {
+              googleAccessToken: account.access_token || undefined,
+              googleRefreshToken: account.refresh_token || undefined,
+            } as any,
           });
         }
 
