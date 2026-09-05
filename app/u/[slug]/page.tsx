@@ -4,13 +4,16 @@ import prisma from "@/lib/prisma";
 import {
   Clock,
   Sparkles,
-  Calendar,
   CheckCircle2,
   ArrowRight,
   ShieldCheck,
   Video,
   Globe,
+  Star,
+  Users,
+  CalendarCheck2,
 } from "lucide-react";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 interface PublicProfileProps {
   params: Promise<{ slug: string }>;
@@ -22,12 +25,7 @@ export default async function PublicCreatorPage({ params }: PublicProfileProps) 
   const profile = await prisma.creatorProfile.findUnique({
     where: { slug: slug.toLowerCase() },
     include: {
-      user: {
-        select: {
-          name: true,
-          timezone: true,
-        },
-      },
+      user: { select: { name: true, timezone: true } },
       sessionTypes: {
         where: { isActive: true },
         orderBy: { priceInPaise: "asc" },
@@ -35,136 +33,235 @@ export default async function PublicCreatorPage({ params }: PublicProfileProps) 
     },
   });
 
-  if (!profile || !profile.isPublished) {
-    notFound();
-  }
+  if (!profile || !profile.isPublished) notFound();
 
   const { user, sessionTypes } = profile;
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      {/* Background glow effects */}
-      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_60%_50%_at_50%_-10%,rgba(99,102,241,0.12),rgba(255,255,255,0))]" />
+  const initials = user.name
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
-      {/* Top Brand Bar */}
-      <header className="relative z-10 border-b border-slate-900 bg-slate-950/70 backdrop-blur-md">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-md shadow-indigo-500/20">
+  return (
+    <div
+      className="min-h-[100dvh] flex flex-col"
+      style={{ background: "var(--bg-base)", color: "var(--text-primary)" }}
+    >
+      <AnimatedBackground />
+
+      {/* ── Navbar ── */}
+      <header
+        className="relative z-30 border-b sticky top-0"
+        style={{
+          borderColor: "var(--glass-border)",
+          background: "rgba(5,8,17,0.8)",
+          backdropFilter: "blur(20px)",
+        }}
+      >
+        <div className="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, #6366f1 0%, #0f766e 100%)" }}
+            >
               <Sparkles className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-white text-base tracking-tight">SessionBook</span>
+            <span className="font-800 text-white text-base tracking-tight">SessionBook</span>
           </Link>
           <Link
             href="/login"
-            className="text-xs text-slate-400 hover:text-slate-200 transition-colors"
+            className="text-xs font-600 transition-colors"
+            style={{ color: "var(--text-muted)" }}
           >
-            Are you a creator? Log in
+            Creator Login →
           </Link>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="relative z-10 flex-1 max-w-5xl w-full mx-auto px-4 py-12 md:py-16 space-y-12">
-        {/* Creator Hero Header */}
-        <div className="text-center max-w-2xl mx-auto space-y-4">
+      <main className="relative z-10 flex-1 max-w-5xl w-full mx-auto px-4 py-12 md:py-20">
+
+        {/* ── Creator Hero ── */}
+        <div className="flex flex-col items-center text-center mb-16 gap-5">
+          {/* Avatar with gradient ring */}
           <div className="relative inline-block">
-            {profile.avatarUrl ? (
-              <img
-                src={profile.avatarUrl}
-                alt={user.name}
-                className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover border-2 border-indigo-500/40 shadow-2xl mx-auto"
-              />
-            ) : (
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-3xl font-bold text-white shadow-2xl mx-auto border-2 border-indigo-500/40">
-                {user.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .slice(0, 2)
-                  .join("")}
-              </div>
-            )}
-            <div className="absolute -bottom-1.5 -right-1.5 bg-indigo-600 text-white p-1.5 rounded-full shadow-lg border-2 border-slate-950">
-              <ShieldCheck className="w-4 h-4" />
+            <div
+              className="absolute inset-0 rounded-3xl opacity-60"
+              style={{
+                background: "linear-gradient(135deg, rgba(99,102,241,0.5), rgba(15,118,110,0.4))",
+                filter: "blur(12px)",
+                transform: "scale(1.1)",
+              }}
+            />
+            <div
+              className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-3xl border-2 overflow-hidden flex items-center justify-center"
+              style={{ borderColor: "rgba(99,102,241,0.4)" }}
+            >
+              {profile.avatarUrl ? (
+                <img
+                  src={profile.avatarUrl}
+                  alt={user.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div
+                  className="w-full h-full flex items-center justify-center text-3xl font-800 text-white"
+                  style={{ background: "linear-gradient(135deg, #6366f1 0%, #0f766e 100%)" }}
+                >
+                  {initials}
+                </div>
+              )}
+            </div>
+            {/* Verified badge */}
+            <div
+              className="absolute -bottom-2 -right-2 w-8 h-8 rounded-xl flex items-center justify-center border-2"
+              style={{
+                background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+                borderColor: "var(--bg-base)",
+              }}
+            >
+              <ShieldCheck className="w-4 h-4 text-white" />
             </div>
           </div>
 
+          {/* Name & timezone */}
           <div>
-            <div className="inline-flex items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                {user.name}
-              </h1>
-            </div>
-            <div className="flex items-center justify-center gap-2 mt-1.5 text-xs text-slate-400">
-              <Globe className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Based in {user.timezone}</span>
+            <h1 className="text-2xl sm:text-3xl font-800 text-white tracking-tight">
+              {user.name}
+            </h1>
+            <div
+              className="flex items-center justify-center gap-1.5 mt-1.5 text-xs font-500"
+              style={{ color: "var(--text-muted)" }}
+            >
+              <Globe className="w-3.5 h-3.5" style={{ color: "#6366f1" }} />
+              <span>{user.timezone}</span>
             </div>
           </div>
 
+          {/* Bio */}
           {profile.bio && (
-            <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl mx-auto">
+            <p
+              className="text-sm sm:text-base leading-relaxed max-w-lg"
+              style={{ color: "var(--text-secondary)" }}
+            >
               {profile.bio}
             </p>
           )}
+
+          {/* Trust strip */}
+          <div className="flex flex-wrap items-center justify-center gap-4 mt-2">
+            {[
+              { icon: ShieldCheck, label: "Verified Creator", color: "#10b981" },
+              { icon: Video, label: "Online Sessions", color: "#6366f1" },
+              { icon: CalendarCheck2, label: "Instant Booking", color: "#f59e0b" },
+            ].map(({ icon: Icon, label, color }) => (
+              <div
+                key={label}
+                className="flex items-center gap-1.5 text-xs font-600 px-3 py-1.5 rounded-full"
+                style={{
+                  background: `${color}12`,
+                  border: `1px solid ${color}25`,
+                  color: color,
+                }}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Available Session Types Section */}
+        {/* ── Session Types ── */}
         <div className="space-y-6">
           <div className="text-center">
-            <h2 className="text-xl font-bold text-white tracking-tight">Book a 1:1 Session</h2>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1">
-              Select a session type below to view open dates and reserve your slot.
+            <p className="badge mx-auto w-fit mb-3">Available Sessions</p>
+            <h2 className="text-xl sm:text-2xl font-800 text-white tracking-tight">
+              Book a 1:1 Session
+            </h2>
+            <p className="text-sm mt-1.5" style={{ color: "var(--text-muted)" }}>
+              Select a session type and choose your preferred time slot.
             </p>
           </div>
 
           {sessionTypes.length === 0 ? (
-            <div className="p-8 rounded-2xl bg-slate-900/40 border border-slate-800 text-center max-w-md mx-auto">
-              <Calendar className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-300 font-medium">No sessions currently available</p>
-              <p className="text-xs text-slate-500 mt-1">Please check back soon.</p>
+            <div className="glass-card p-10 text-center max-w-md mx-auto">
+              <CalendarCheck2 className="w-10 h-10 mx-auto mb-3" style={{ color: "var(--text-muted)" }} />
+              <p className="font-700 text-white">No sessions available yet</p>
+              <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
+                Please check back soon.
+              </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sessionTypes.map((st) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {sessionTypes.map((st, i) => (
                 <div
                   key={st.id}
-                  className="p-6 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-900/90 transition-all shadow-xl flex flex-col justify-between group"
+                  className="glass-card p-6 flex flex-col justify-between group animate-fade-up relative overflow-hidden"
+                  style={{ animationDelay: `${i * 80}ms` }}
                 >
-                  <div className="space-y-4">
+                  {/* Hover glow */}
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                    style={{
+                      background: "radial-gradient(ellipse at 0% 0%, rgba(99,102,241,0.08) 0%, transparent 60%)",
+                    }}
+                  />
+
+                  <div className="relative z-10 space-y-4">
+                    {/* Duration + price */}
                     <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-1.5 text-xs text-indigo-400 font-medium">
-                        <Clock className="w-4 h-4" />
-                        <span>{st.durationMinutes} minutes</span>
+                      <div
+                        className="flex items-center gap-1.5 text-xs font-600 px-2.5 py-1 rounded-full"
+                        style={{
+                          background: "rgba(99,102,241,0.1)",
+                          border: "1px solid rgba(99,102,241,0.2)",
+                          color: "#a5b4fc",
+                        }}
+                      >
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{st.durationMinutes} min</span>
                       </div>
-                      <div className="text-xl font-bold text-white">
-                        ₹{(st.priceInPaise / 100).toLocaleString("en-IN")}
+                      <div className="text-right">
+                        <span className="text-xl font-800 text-white">
+                          ₹{(st.priceInPaise / 100).toLocaleString("en-IN")}
+                        </span>
                       </div>
                     </div>
 
+                    {/* Title + desc */}
                     <div>
-                      <h3 className="text-lg font-semibold text-white group-hover:text-indigo-300 transition-colors">
+                      <h3 className="text-base font-700 text-white group-hover:text-indigo-300 transition-colors leading-tight">
                         {st.title}
                       </h3>
                       {st.description && (
-                        <p className="text-xs text-slate-400 mt-1.5 line-clamp-3 leading-relaxed">
+                        <p
+                          className="text-xs mt-2 leading-relaxed line-clamp-3"
+                          style={{ color: "var(--text-muted)" }}
+                        >
                           {st.description}
                         </p>
                       )}
                     </div>
 
-                    <div className="pt-3 border-t border-slate-800/80 flex items-center gap-2 text-xs text-slate-400">
-                      <Video className="w-3.5 h-3.5 text-slate-500" />
-                      <span>Online Video Call & Calendar Invite (.ics)</span>
+                    {/* Format */}
+                    <div
+                      className="flex items-center gap-2 text-xs pt-3 border-t"
+                      style={{ borderColor: "var(--glass-border)", color: "var(--text-muted)" }}
+                    >
+                      <Video className="w-3.5 h-3.5" />
+                      <span>Online Video · Calendar .ics invite</span>
                     </div>
                   </div>
 
-                  <div className="pt-6 mt-4">
+                  {/* CTA */}
+                  <div className="relative z-10 pt-5 mt-4">
                     <Link
                       href={`/u/${profile.slug}/book/${st.id}`}
-                      className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-sm font-medium shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 transition-all group-hover:shadow-indigo-500/35"
+                      className="btn-primary btn-emerald w-full justify-center text-sm py-3"
                     >
-                      <span>Choose Slot</span>
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      <span>Choose a Slot</span>
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                     </Link>
                   </div>
                 </div>
@@ -174,9 +271,24 @@ export default async function PublicCreatorPage({ params }: PublicProfileProps) 
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-slate-900 py-6 text-center text-xs text-slate-500">
-        <p>Powered by SessionBook • Direct 1:1 Sessions with verified experts</p>
+      {/* ── Footer ── */}
+      <footer
+        className="relative z-10 border-t py-6 text-center text-xs"
+        style={{
+          borderColor: "var(--glass-border)",
+          color: "var(--text-muted)",
+          background: "rgba(5,8,17,0.5)",
+        }}
+      >
+        <div className="flex items-center justify-center gap-2">
+          <div
+            className="w-5 h-5 rounded-md flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, #6366f1, #0f766e)" }}
+          >
+            <Sparkles className="w-3 h-3 text-white" />
+          </div>
+          <span>Powered by SessionBook · Secure payments via Razorpay</span>
+        </div>
       </footer>
     </div>
   );
