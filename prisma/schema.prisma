@@ -1,0 +1,101 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String   @id @default(cuid())
+  role          String   @default("CREATOR")
+  name          String
+  email         String   @unique
+  phone         String?
+  passwordHash  String?
+  timezone      String   @default("Asia/Kolkata")
+  createdAt     DateTime @default(now())
+  creatorProfile CreatorProfile?
+}
+
+model CreatorProfile {
+  id                    String                 @id @default(cuid())
+  userId                String                 @unique
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug                  String                 @unique
+  bio                   String?
+  avatarUrl             String?
+  isPublished           Boolean                @default(false)
+  payoutMethod          String?                // "bank" | "upi" | "razorpay_route"
+  payoutDetails         String?                // JSON string: account no, IFSC, UPI id, or Route linked_account_id
+  sessionTypes          SessionType[]
+  availabilityRules     AvailabilityRule[]
+  availabilityOverrides AvailabilityOverride[]
+  bookings              Booking[]
+}
+
+model SessionType {
+  id              String         @id @default(cuid())
+  creatorId       String
+  creator         CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  durationMinutes Int
+  priceInPaise    Int
+  bufferBeforeMin Int            @default(0)
+  bufferAfterMin  Int            @default(0)
+  isActive        Boolean        @default(true)
+  bookings        Booking[]
+}
+
+model AvailabilityRule {
+  id        String         @id @default(cuid())
+  creatorId String
+  creator   CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  dayOfWeek Int            // 0 = Sunday .. 6 = Saturday
+  startTime String         // "10:00" in creator's local timezone
+  endTime   String         // "18:00"
+}
+
+model AvailabilityOverride {
+  id        String         @id @default(cuid())
+  creatorId String
+  creator   CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  date      DateTime       // specific calendar date
+  isBlocked Boolean        @default(true) // true = day off; false = extra opening w/ startTime/endTime
+  startTime String?
+  endTime   String?
+}
+
+model Booking {
+  id             String         @id @default(cuid())
+  sessionTypeId  String
+  sessionType    SessionType    @relation(fields: [sessionTypeId], references: [id])
+  creatorId      String
+  creator        CreatorProfile @relation(fields: [creatorId], references: [id])
+  clientName     String
+  clientEmail    String
+  clientPhone    String
+  notes          String?
+  scheduledStart DateTime       // stored UTC
+  scheduledEnd   DateTime       // stored UTC
+  status         String         @default("PENDING_PAYMENT") // PENDING_PAYMENT, CONFIRMED, CANCELLED, REFUNDED, COMPLETED
+  cancelToken    String         @unique @default(cuid())
+  createdAt      DateTime       @default(now())
+  payment        Payment?
+}
+
+model Payment {
+  id                 String   @id @default(cuid())
+  bookingId          String   @unique
+  booking            Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  razorpayOrderId    String
+  razorpayPaymentId  String?
+  amountTotalPaise   Int
+  platformFeePaise   Int
+  creatorPayoutPaise Int
+  status             String   @default("CREATED") // CREATED, CAPTURED, FAILED, REFUNDED
+  payoutStatus       String   @default("NOT_PAID_OUT") // NOT_PAID_OUT, ROUTE_TRANSFERRED, MANUALLY_PAID
+  createdAt          DateTime @default(now())
+}
