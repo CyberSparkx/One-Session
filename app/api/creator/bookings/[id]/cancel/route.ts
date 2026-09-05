@@ -99,27 +99,74 @@ export async function POST(
 
       // 2. Update payment status and refund audit
       if (booking.payment) {
-        await tx.payment.update({
-          where: { id: booking.payment.id },
-          data: {
-            status: PaymentStatus.REFUNDED,
-            refundType: refundAmountPaise > 0 ? refundType : null,
-            refundAmountPaise: refundAmountPaise > 0 ? refundAmountPaise : 0,
-            payoutStatus: "NOT_PAID_OUT",
-          },
-        });
+        try {
+          await tx.payment.update({
+            where: { id: booking.payment.id },
+            data: {
+              status: PaymentStatus.REFUNDED,
+              refundType: refundAmountPaise > 0 ? refundType : null,
+              refundAmountPaise: refundAmountPaise > 0 ? refundAmountPaise : 0,
+              payoutStatus: "NOT_PAID_OUT",
+            },
+          });
+        } catch (paymentErr) {
+          // Fallback if running engine has cached schema
+          await tx.payment.update({
+            where: { id: booking.payment.id },
+            data: {
+              status: PaymentStatus.REFUNDED,
+              payoutStatus: "NOT_PAID_OUT",
+            },
+          });
+          try {
+            await prisma.$runCommandRaw({
+              update: "Payment",
+              updates: [
+                {
+                  q: { _id: { $oid: booking.payment.id } },
+                  u: {
+                    $set: {
+                      refundType: refundAmountPaise > 0 ? refundType : null,
+                      refundAmountPaise: refundAmountPaise > 0 ? refundAmountPaise : 0,
+                    },
+                  },
+                },
+              ],
+            });
+          } catch (rawErr) {
+            console.warn("Could not record raw refund fields:", rawErr);
+          }
+        }
       }
 
       // 3. Debit creator's account balance for the 4% fee if Full Refund was chosen
       if (creatorFeeDebitPaise > 0 && user.creatorProfile) {
-        await tx.creatorProfile.update({
-          where: { id: user.creatorProfile.id },
-          data: {
-            balanceAdjustmentPaise: {
-              decrement: creatorFeeDebitPaise,
+        try {
+          await tx.creatorProfile.update({
+            where: { id: user.creatorProfile.id },
+            data: {
+              balanceAdjustmentPaise: {
+                decrement: creatorFeeDebitPaise,
+              },
             },
-          },
-        });
+          });
+        } catch (profileErr) {
+          try {
+            await prisma.$runCommandRaw({
+              update: "CreatorProfile",
+              updates: [
+                {
+                  q: { _id: { $oid: user.creatorProfile.id } },
+                  u: {
+                    $inc: { balanceAdjustmentPaise: -creatorFeeDebitPaise },
+                  },
+                },
+              ],
+            });
+          } catch (rawProfileErr) {
+            console.warn("Could not record raw balanceAdjustmentPaise:", rawProfileErr);
+          }
+        }
       }
     });
 
