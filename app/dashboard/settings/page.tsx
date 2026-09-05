@@ -5,13 +5,9 @@ import {
   User,
   Globe,
   Clock,
-  CreditCard,
   CheckCircle2,
   AlertCircle,
   Save,
-  Sparkles,
-  Link as LinkIcon,
-  HelpCircle,
   Building2,
   Smartphone,
 } from "lucide-react";
@@ -100,7 +96,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -108,40 +104,45 @@ export default function SettingsPage() {
   return (
     <div className="max-w-4xl space-y-8 pb-12">
       {/* Header */}
-      <div className="pb-6 border-b border-slate-800">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+      <div className="pb-6 border-b border-gray-200">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
+            Account
+          </span>
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-950 tracking-tight">
           Profile & Payout Settings
         </h1>
-        <p className="text-sm text-slate-400 mt-1">
-          Customize your public presence, booking slug, and payout preferences.
+        <p className="text-sm text-gray-500 mt-1">
+          Customize your public presence, personal booking slug, and automated payout preferences.
         </p>
       </div>
 
       {message && (
         <div
-          className={`p-4 rounded-xl flex items-center gap-3 text-sm border ${
+          className={`p-4 rounded-xl flex items-center gap-3 text-xs font-medium border ${
             message.type === "success"
-              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-              : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+              ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+              : "bg-red-50 border-red-200 text-red-600"
           }`}
         >
           {message.type === "success" ? (
-            <CheckCircle2 className="w-5 h-5 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
           ) : (
-            <AlertCircle className="w-5 h-5 shrink-0" />
+            <AlertCircle className="w-4 h-4 shrink-0" />
           )}
           <span>{message.text}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Section 1: Visibility & Publishing */}
-        <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 shadow-xl space-y-4">
+        <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-white">Public Page Visibility</h2>
-              <p className="text-xs text-slate-400 mt-0.5">
-                When enabled, clients can view your public booking page and book sessions.
+              <h2 className="text-base font-bold text-gray-950">Public Page Visibility</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                When enabled, clients can view your public booking profile and schedule sessions.
               </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -151,20 +152,20 @@ export default function SettingsPage() {
                 onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
                 className="sr-only peer"
               />
-              <div className="w-12 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
             </label>
           </div>
         </div>
 
         {/* Section 2: Personal Profile */}
-        <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 shadow-xl space-y-6">
-          <h2 className="text-lg font-semibold text-white border-b border-slate-800/80 pb-3">
+        <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-xs space-y-5">
+          <h2 className="text-base font-bold text-gray-950 border-b border-gray-100 pb-3">
             Public Profile Information
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
                 Display Name
               </label>
               <input
@@ -172,29 +173,29 @@ export default function SettingsPage() {
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
                 Account Email
               </label>
               <input
                 type="email"
                 disabled
                 value={formData.email}
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-950/30 border border-slate-800/50 text-slate-400 text-sm cursor-not-allowed"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-gray-100 border border-gray-200 text-gray-400 text-sm cursor-not-allowed"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
               Public Booking URL Slug
             </label>
             <div className="flex items-center">
-              <span className="px-3 py-2.5 rounded-l-xl bg-slate-800/80 border border-r-0 border-slate-800 text-slate-400 text-xs font-mono">
+              <span className="px-3.5 py-2.5 rounded-l-xl bg-gray-100 border border-r-0 border-gray-200 text-gray-500 text-xs font-mono font-medium">
                 /u/
               </span>
               <input
@@ -207,30 +208,30 @@ export default function SettingsPage() {
                     slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
                   })
                 }
-                className="flex-1 px-4 py-2.5 rounded-r-xl bg-slate-950/60 border border-slate-800 text-slate-100 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                className="flex-1 px-3.5 py-2.5 rounded-r-xl bg-gray-50 border border-gray-200 text-gray-900 text-sm font-mono focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
               />
             </div>
-            <p className="text-[11px] text-slate-500 mt-1">
-              Your personal link: <span className="text-indigo-400">/u/{formData.slug}</span>
+            <p className="text-[11px] text-gray-400 mt-1">
+              Your personal URL: <span className="text-orange-600 font-medium">/u/{formData.slug}</span>
             </p>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
               Bio & Introduction
             </label>
             <textarea
               rows={4}
               value={formData.bio}
               onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-              placeholder="Tell clients about your background, what topics you cover, and what they will gain from your session..."
-              className="w-full px-4 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              placeholder="Tell clients about your background, expertise, and what they will get from your 1:1 sessions..."
+              className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
                 Avatar Image URL
               </label>
               <input
@@ -238,18 +239,18 @@ export default function SettingsPage() {
                 placeholder="https://images.unsplash.com/..."
                 value={formData.avatarUrl}
                 onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
                 Your Timezone
               </label>
               <select
                 value={formData.timezone}
                 onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all cursor-pointer"
               >
                 <option value="Asia/Kolkata">Asia/Kolkata (IST - UTC+05:30)</option>
                 <option value="America/New_York">America/New_York (EST/EDT)</option>
@@ -266,22 +267,22 @@ export default function SettingsPage() {
         </div>
 
         {/* Section 3: Payout Details */}
-        <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 shadow-xl space-y-6">
-          <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+        <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-xs space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
             <div>
-              <h2 className="text-lg font-semibold text-white">Payout Method (96% Creator Share)</h2>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <h2 className="text-base font-bold text-gray-950">Payout Method (96% Creator Share)</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
                 The platform retains a 4% commission per booking. You receive 96% directly via your chosen method.
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, payoutMethod: "upi" })}
-                className={`py-1.5 px-3 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
+                className={`py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                   formData.payoutMethod === "upi"
-                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
-                    : "bg-slate-800 text-slate-400 hover:text-slate-200"
+                    ? "bg-orange-50 text-orange-700 border border-orange-200"
+                    : "bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100"
                 }`}
               >
                 <Smartphone className="w-3.5 h-3.5" />
@@ -290,10 +291,10 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, payoutMethod: "bank" })}
-                className={`py-1.5 px-3 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
+                className={`py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                   formData.payoutMethod === "bank"
-                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
-                    : "bg-slate-800 text-slate-400 hover:text-slate-200"
+                    ? "bg-orange-50 text-orange-700 border border-orange-200"
+                    : "bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100"
                 }`}
               >
                 <Building2 className="w-3.5 h-3.5" />
@@ -304,7 +305,7 @@ export default function SettingsPage() {
 
           {formData.payoutMethod === "upi" ? (
             <div>
-              <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
                 UPI ID (VPA)
               </label>
               <input
@@ -320,16 +321,16 @@ export default function SettingsPage() {
                     },
                   })
                 }
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
               />
-              <p className="text-[11px] text-slate-500 mt-1">
-                Instant payouts will be disbursed directly to this UPI address.
+              <p className="text-[11px] text-gray-400 mt-1">
+                Payouts will be automatically disbursed directly to this UPI address.
               </p>
             </div>
           ) : (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
                   Account Holder Name
                 </label>
                 <input
@@ -345,13 +346,13 @@ export default function SettingsPage() {
                       },
                     })
                   }
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
                     Bank Account Number
                   </label>
                   <input
@@ -367,12 +368,12 @@ export default function SettingsPage() {
                         },
                       })
                     }
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
                     IFSC Code
                   </label>
                   <input
@@ -388,7 +389,7 @@ export default function SettingsPage() {
                         },
                       })
                     }
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-100 placeholder-slate-500 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 text-sm uppercase focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                   />
                 </div>
               </div>
@@ -397,14 +398,14 @@ export default function SettingsPage() {
         </div>
 
         {/* Action Button */}
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-2">
           <button
             type="submit"
             disabled={saving}
-            className="py-3 px-6 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium text-sm shadow-lg shadow-indigo-500/25 flex items-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
+            className="py-2.5 px-6 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold text-xs shadow-xs shadow-orange-500/20 flex items-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
           >
             {saving ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <>
                 <Save className="w-4 h-4" />
