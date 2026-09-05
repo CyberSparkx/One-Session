@@ -26,10 +26,7 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div
-      className="min-h-screen flex flex-col md:flex-row relative"
-      style={{ background: "var(--bg-base)", color: "var(--text-primary)" }}
-    >
+    <div className="min-h-screen flex flex-col md:flex-row bg-[#FAFAFA] text-gray-900 relative">
       <AnimatedBackground />
 
       <DashboardNav

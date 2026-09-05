@@ -66,98 +66,67 @@ export default function DashboardNav({ user }: DashboardNavProps) {
     .toUpperCase();
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white text-gray-900 border-r border-gray-200">
       {/* Brand */}
-      <div
-        className="p-5 flex items-center gap-3 border-b"
-        style={{ borderColor: "var(--glass-border)" }}
-      >
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{
-            background: "linear-gradient(135deg, #6366f1 0%, #0f766e 100%)",
-            boxShadow: "0 4px 14px rgba(99,102,241,0.35)",
-          }}
-        >
-          <Sparkles className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <span className="font-800 text-base text-white block leading-tight">SessionBook</span>
-          <span className="text-[11px] font-500" style={{ color: "var(--text-muted)" }}>
-            Creator Workspace
-          </span>
-        </div>
+      <div className="p-5 flex items-center justify-between border-b border-gray-100">
+        <Link href="/dashboard" className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center text-white shadow-sm">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="font-extrabold text-sm tracking-tight text-gray-900 block leading-tight">SessionBook</span>
+            <span className="text-[11px] font-medium text-gray-400">Creator Hub</span>
+          </div>
+        </Link>
       </div>
 
       {/* Booking Page Card */}
-      <div className="px-3 pt-4">
-        <div
-          className="rounded-2xl p-4"
-          style={{
-            background: "linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(15,118,110,0.06) 100%)",
-            border: "1px solid rgba(99,102,241,0.2)",
-          }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-700 text-white">Your Booking Page</span>
+      <div className="p-3">
+        <div className="rounded-xl p-3 bg-gray-50 border border-gray-200">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-gray-700">Public Page</span>
             <span
-              className="text-[10px] font-700 px-2 py-0.5 rounded-full"
-              style={
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${
                 user.isPublished
-                  ? { background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)" }
-                  : { background: "rgba(245,158,11,0.15)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.3)" }
-              }
+                  ? "bg-green-50 text-green-700 border border-green-200"
+                  : "bg-amber-50 text-amber-700 border border-amber-200"
+              }`}
             >
+              <span className={`w-1.5 h-1.5 rounded-full ${user.isPublished ? "bg-green-500" : "bg-amber-500"}`} />
               {user.isPublished ? "Live" : "Draft"}
             </span>
           </div>
-          <p
-            className="text-xs font-500 font-mono mb-3 truncate"
-            style={{ color: "var(--text-muted)" }}
-          >
+          <p className="text-xs font-mono text-gray-500 mb-2.5 truncate">
             /u/{user.slug}
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <Link
               href={publicUrl}
               target="_blank"
-              className="flex-1 py-1.5 px-3 rounded-xl text-xs font-600 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-              style={{
-                background: "rgba(99,102,241,0.15)",
-                color: "#a5b4fc",
-                border: "1px solid rgba(99,102,241,0.25)",
-              }}
+              className="flex-1 py-1 px-2.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              <ExternalLink className="w-3.5 h-3.5" />
+              <ExternalLink className="w-3 h-3" />
               Preview
             </Link>
             <button
               onClick={copyPublicLink}
-              title="Copy booking link"
-              className="p-1.5 rounded-xl transition-all cursor-pointer"
-              style={{
-                background: copied ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.06)",
-                border: `1px solid ${copied ? "rgba(16,185,129,0.3)" : "rgba(255,255,255,0.1)"}`,
-                color: copied ? "#10b981" : "#94a3b8",
-              }}
+              title="Copy link"
+              className="p-1 rounded-lg bg-white hover:bg-gray-100 text-gray-500 border border-gray-200 transition-colors"
             >
-              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Nav Section label */}
-      <p
-        className="px-5 pt-5 pb-2 text-[10px] font-700 uppercase tracking-widest"
-        style={{ color: "var(--text-faint)" }}
-      >
-        Navigation
-      </p>
+      {/* Section label */}
+      <div className="px-4 pt-3 pb-1">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Menu</p>
+      </div>
 
-      {/* Nav Links */}
-      <nav className="flex-1 px-3 space-y-1">
+      {/* Navigation links */}
+      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
         {links.map((link) => {
           const Icon = link.icon;
           const isActive = pathname === link.href;
@@ -166,86 +135,47 @@ export default function DashboardNav({ user }: DashboardNavProps) {
               key={link.href}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group cursor-pointer"
-              style={
+              className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                 isActive
-                  ? {
-                      background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(99,102,241,0.08) 100%)",
-                      border: "1px solid rgba(99,102,241,0.3)",
-                    }
-                  : {
-                      background: "transparent",
-                      border: "1px solid transparent",
-                    }
-              }
+                  ? "bg-orange-50 text-orange-600 font-semibold"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              }`}
             >
               <div
-                className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all"
-                style={
+                className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
                   isActive
-                    ? { background: "rgba(99,102,241,0.25)", color: "#a5b4fc" }
-                    : { background: "rgba(255,255,255,0.04)", color: "#64748b" }
-                }
+                    ? "bg-orange-100 text-orange-600"
+                    : "text-gray-400 group-hover:text-gray-600"
+                }`}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <p
-                  className="text-sm font-600 leading-tight truncate"
-                  style={{ color: isActive ? "#f8fafc" : "#94a3b8" }}
-                >
-                  {link.label}
-                </p>
-                <p className="text-[10px] truncate" style={{ color: "var(--text-faint)" }}>
-                  {link.sub}
-                </p>
+                <p className="leading-tight truncate">{link.label}</p>
+                <p className="text-[11px] font-normal text-gray-400 truncate">{link.sub}</p>
               </div>
               {isActive && (
-                <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#6366f1" }} />
+                <ChevronRight className="w-3.5 h-3.5 text-orange-500 flex-shrink-0" />
               )}
             </Link>
           );
         })}
       </nav>
 
-      {/* Bottom: User */}
-      <div
-        className="p-4 border-t"
-        style={{ borderColor: "var(--glass-border)" }}
-      >
-        <div className="flex items-center gap-3">
-          {/* Avatar circle */}
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-700 text-white flex-shrink-0"
-            style={{
-              background: "linear-gradient(135deg, #6366f1 0%, #0f766e 100%)",
-            }}
-          >
+      {/* User Footer */}
+      <div className="p-3 border-t border-gray-100 mt-auto">
+        <div className="flex items-center gap-2.5 p-2 rounded-xl bg-gray-50 border border-gray-200/60">
+          <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-700 font-bold text-xs flex items-center justify-center flex-shrink-0">
             {avatarInitials}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-600 text-white truncate">{user.name}</p>
-            <p className="text-[11px] truncate" style={{ color: "var(--text-muted)" }}>
-              {user.email}
-            </p>
+            <p className="text-xs font-semibold text-gray-900 truncate">{user.name}</p>
+            <p className="text-[11px] text-gray-400 truncate">{user.email}</p>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
             title="Sign out"
-            className="p-2 rounded-xl transition-all cursor-pointer"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "#64748b",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.12)";
-              (e.currentTarget as HTMLButtonElement).style.color = "#f87171";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)";
-              (e.currentTarget as HTMLButtonElement).style.color = "#64748b";
-            }}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" />
           </button>
@@ -257,31 +187,16 @@ export default function DashboardNav({ user }: DashboardNavProps) {
   return (
     <>
       {/* ── Mobile Header ── */}
-      <header
-        className="md:hidden flex items-center justify-between px-4 py-3 border-b sticky top-0 z-40"
-        style={{
-          background: "rgba(5,8,17,0.85)",
-          backdropFilter: "blur(20px)",
-          borderColor: "var(--glass-border)",
-        }}
-      >
-        <Link href="/dashboard" className="flex items-center gap-2.5">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #6366f1, #0f766e)" }}
-          >
-            <Sparkles className="w-4 h-4 text-white" />
+      <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 sticky top-0 z-40">
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-orange-500 flex items-center justify-center text-white shadow-sm">
+            <Sparkles className="w-3.5 h-3.5" />
           </div>
-          <span className="font-800 text-white">SessionBook</span>
+          <span className="font-extrabold text-sm tracking-tight text-gray-900">SessionBook</span>
         </Link>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 rounded-xl cursor-pointer transition-all"
-          style={{
-            background: "var(--glass-bg)",
-            border: "1px solid var(--glass-border)",
-            color: "#94a3b8",
-          }}
+          className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100"
         >
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -290,21 +205,16 @@ export default function DashboardNav({ user }: DashboardNavProps) {
       {/* Mobile overlay */}
       {mobileMenuOpen && (
         <div
-          className="md:hidden fixed inset-0 z-30 bg-black/60 backdrop-blur-sm"
+          className="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-xs"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
 
       {/* ── Sidebar ── */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-40 w-64 flex flex-col border-r transition-transform duration-300 md:translate-x-0 ${
+        className={`fixed md:sticky top-0 h-screen z-50 md:z-30 w-64 flex flex-col transition-transform duration-200 md:translate-x-0 ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{
-          background: "rgba(7,11,20,0.95)",
-          backdropFilter: "blur(24px)",
-          borderColor: "var(--glass-border)",
-        }}
       >
         <SidebarContent />
       </aside>
