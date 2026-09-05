@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { Sparkles, ArrowRight, Lock, Mail, User, Clock, AlertCircle } from "lucide-react";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -90,6 +91,19 @@ export default function SignUpPage() {
               <span>{generalError}</span>
             </div>
           )}
+
+          <GoogleSignInButton text="Sign up with Google" callbackUrl="/dashboard" />
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-800" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-slate-900 px-3 text-slate-500 font-medium tracking-wider">
+                Or with email
+              </span>
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

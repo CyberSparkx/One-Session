@@ -49,22 +49,102 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-      ? [
-          GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-          }),
-        ]
-      : []),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID || "placeholder_google_client_id",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "placeholder_google_client_secret",
+    }),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        const email = user.email?.toLowerCase().trim();
+        if (!email) return false;
+
+        let existingUser = await prisma.user.findUnique({
+          where: { email },
+          include: { creatorProfile: true },
+        });
+
+        if (!existingUser) {
+          const name = user.name || "Creator";
+          const baseSlug = name
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "") || "creator";
+
+          let slug = baseSlug;
+          let counter = 1;
+          while (await prisma.creatorProfile.findUnique({ where: { slug } })) {
+            slug = `${baseSlug}-${counter}`;
+            counter++;
+          }
+
+          existingUser = await prisma.user.create({
+            data: {
+              name,
+              email,
+              role: "CREATOR",
+              creatorProfile: {
+                create: {
+                  slug,
+                  avatarUrl: user.image || null,
+                  bio: `Hi, I'm ${name}. Book a 1:1 session with me to discuss strategy, mentorship, or consultation!`,
+                  isPublished: true,
+                  availabilityRules: {
+                    create: [
+                      { dayOfWeek: 1, startTime: "10:00", endTime: "18:00" },
+                      { dayOfWeek: 2, startTime: "10:00", endTime: "18:00" },
+                      { dayOfWeek: 3, startTime: "10:00", endTime: "18:00" },
+                      { dayOfWeek: 4, startTime: "10:00", endTime: "18:00" },
+                      { dayOfWeek: 5, startTime: "10:00", endTime: "18:00" },
+                    ],
+                  },
+                  sessionTypes: {
+                    create: {
+                      title: "30-Minute Consultation",
+                      description: "One-on-one session to discuss your questions and goals.",
+                      durationMinutes: 30,
+                      priceInPaise: 150000, // ₹1,500
+                      bufferBeforeMin: 0,
+                      bufferAfterMin: 15,
+                      isActive: true,
+                    },
+                  },
+                },
+              },
+            },
+            include: { creatorProfile: true },
+          });
+        }
+
+        user.id = existingUser.id;
+        (user as any).role = existingUser.role;
+        (user as any).creatorProfileId = existingUser.creatorProfile?.id;
+        (user as any).slug = existingUser.creatorProfile?.slug;
+      }
+      return true;
+    },
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.role = (user as any).role;
         token.creatorProfileId = (user as any).creatorProfileId;
         token.slug = (user as any).slug;
+      }
+
+      // If token doesn't have slug yet (e.g. initial Google OAuth callback)
+      if (!token.slug && token.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email },
+          include: { creatorProfile: true },
+        });
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = dbUser.role;
+          token.creatorProfileId = dbUser.creatorProfile?.id;
+          token.slug = dbUser.creatorProfile?.slug;
+        }
       }
 
       if (trigger === "update" && session) {
