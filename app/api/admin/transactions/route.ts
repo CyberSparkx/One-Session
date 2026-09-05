@@ -1,0 +1,63 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import prisma from "@/lib/prisma";
+
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const payments = await prisma.payment.findMany({
+      include: {
+        booking: {
+          include: {
+            sessionType: true,
+            creator: {
+              include: {
+                user: { select: { name: true, email: true } },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const formatted = payments.map((p) => {
+      let payoutDetails = null;
+      if (p.booking.creator.payoutDetails) {
+        try {
+          payoutDetails = JSON.parse(p.booking.creator.payoutDetails);
+        } catch (e) {}
+      }
+
+      return {
+        id: p.id,
+        bookingId: p.bookingId,
+        razorpayOrderId: p.razorpayOrderId,
+        razorpayPaymentId: p.razorpayPaymentId,
+        clientName: p.booking.clientName,
+        clientEmail: p.booking.clientEmail,
+        creatorName: p.booking.creator.user.name,
+        creatorEmail: p.booking.creator.user.email,
+        creatorPayoutMethod: p.booking.creator.payoutMethod,
+        creatorPayoutDetails: payoutDetails,
+        sessionTitle: p.booking.sessionType.title,
+        amountTotalPaise: p.amountTotalPaise,
+        platformFeePaise: p.platformFeePaise,
+        creatorPayoutPaise: p.creatorPayoutPaise,
+        status: p.status,
+        payoutStatus: p.payoutStatus,
+        createdAt: p.createdAt,
+      };
+    });
+
+    return NextResponse.json(formatted);
+  } catch (error: any) {
+    console.error("GET /api/admin/transactions error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
