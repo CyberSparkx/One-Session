@@ -1,0 +1,161 @@
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { verifyWebhookSignature } from "@/lib/razorpay";
+import { BookingStatus, PaymentStatus, PayoutStatus } from "@/lib/types";
+import { sendBookingConfirmationEmail } from "@/lib/email";
+
+export async function POST(req: Request) {
+  try {
+    const rawBody = await req.text();
+    const signature = req.headers.get("x-razorpay-signature") || "";
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+    // 1. In production, signature verification is strictly enforced
+    if (webhookSecret) {
+      const isValid = verifyWebhookSignature(rawBody, signature, webhookSecret);
+      if (!isValid) {
+        console.error("Razorpay webhook signature verification failed");
+        return NextResponse.json({ error: "Invalid webhook signature" }, { status: 400 });
+      }
+    }
+
+    let payload: any;
+    try {
+      payload = JSON.parse(rawBody);
+    } catch (e) {
+      return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
+    }
+
+    const event = payload.event;
+    console.log(`Received Razorpay webhook event: ${event}`);
+
+    // Handle payment.captured or order.paid
+    if (event === "payment.captured" || event === "order.paid") {
+      const paymentEntity = payload.payload?.payment?.entity;
+      const orderId = paymentEntity?.order_id || payload.payload?.order?.entity?.id;
+      const paymentId = paymentEntity?.id;
+
+      if (!orderId) {
+        return NextResponse.json({ error: "Missing order_id in webhook" }, { status: 400 });
+      }
+
+      // Find the payment record in the platform ledger
+      const paymentRecord = await prisma.payment.findFirst({
+        where: { razorpayOrderId: orderId },
+        include: {
+          booking: {
+            include: {
+              sessionType: true,
+              creator: {
+                include: {
+                  user: { select: { name: true, email: true, timezone: true } },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!paymentRecord) {
+        console.warn(`Payment record for order ${orderId} not found in database`);
+        return NextResponse.json({ message: "Order not found, ignored" }, { status: 200 });
+      }
+
+      // Idempotency: If already captured and booking confirmed, do not reprocess
+      if (paymentRecord.status === PaymentStatus.CAPTURED) {
+        return NextResponse.json({ message: "Already processed" }, { status: 200 });
+      }
+
+      // Compute 4% platform commission and 96% creator payout
+      const amountPaise = paymentRecord.amountTotalPaise;
+      const platformFeePaise = Math.round(amountPaise * 0.04);
+      const creatorPayoutPaise = amountPaise - platformFeePaise;
+
+      // Update payment and booking statuses in a transaction
+      await prisma.$transaction(async (tx) => {
+        await tx.payment.update({
+          where: { id: paymentRecord.id },
+          data: {
+            status: PaymentStatus.CAPTURED,
+            razorpayPaymentId: paymentId || paymentRecord.razorpayPaymentId,
+            platformFeePaise,
+            creatorPayoutPaise,
+            payoutStatus: PayoutStatus.NOT_PAID_OUT, // Eligible for creator payout
+          },
+        });
+
+        await tx.booking.update({
+          where: { id: paymentRecord.bookingId },
+          data: {
+            status: BookingStatus.CONFIRMED,
+          },
+        });
+      });
+
+      // Send confirmation emails with calendar invite to client and creator
+      try {
+        await sendBookingConfirmationEmail({
+          bookingId: paymentRecord.booking.id,
+          sessionTitle: paymentRecord.booking.sessionType.title,
+          scheduledStart: paymentRecord.booking.scheduledStart,
+          scheduledEnd: paymentRecord.booking.scheduledEnd,
+          clientName: paymentRecord.booking.clientName,
+          clientEmail: paymentRecord.booking.clientEmail,
+          creatorName: paymentRecord.booking.creator.user.name,
+          creatorEmail: paymentRecord.booking.creator.user.email,
+          creatorTimezone: paymentRecord.booking.creator.user.timezone,
+          priceInPaise: paymentRecord.amountTotalPaise,
+        });
+      } catch (emailErr) {
+        console.error("Failed to send booking emails:", emailErr);
+      }
+
+      return NextResponse.json({ message: "Booking confirmed successfully" }, { status: 200 });
+    }
+
+    // Handle payment.failed
+    if (event === "payment.failed") {
+      const paymentEntity = payload.payload?.payment?.entity;
+      const orderId = paymentEntity?.order_id;
+
+      if (orderId) {
+        await prisma.payment.updateMany({
+          where: { razorpayOrderId: orderId },
+          data: { status: PaymentStatus.FAILED },
+        });
+      }
+
+      return NextResponse.json({ message: "Payment failure recorded" }, { status: 200 });
+    }
+
+    // Handle refund.processed
+    if (event === "refund.processed") {
+      const paymentId = payload.payload?.payment?.entity?.id;
+      if (paymentId) {
+        const payment = await prisma.payment.findFirst({
+          where: { razorpayPaymentId: paymentId },
+        });
+
+        if (payment) {
+          await prisma.$transaction([
+            prisma.payment.update({
+              where: { id: payment.id },
+              data: { status: PaymentStatus.REFUNDED },
+            }),
+            prisma.booking.update({
+              where: { id: payment.bookingId },
+              data: { status: BookingStatus.REFUNDED },
+            }),
+          ]);
+        }
+      }
+
+      return NextResponse.json({ message: "Refund recorded" }, { status: 200 });
+    }
+
+    return NextResponse.json({ message: `Unhandled event ${event}` }, { status: 200 });
+  } catch (error: any) {
+    console.error("Webhook processing error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

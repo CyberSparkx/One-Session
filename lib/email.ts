@@ -1,0 +1,169 @@
+import { Resend } from "resend";
+import { format } from "date-fns";
+
+const resendApiKey = process.env.RESEND_API_KEY;
+const resend = resendApiKey && !resendApiKey.startsWith("re_yourResend") ? new Resend(resendApiKey) : null;
+const fromEmail = process.env.EMAIL_FROM || "SessionBook <notifications@sessionbook.com>";
+
+export interface BookingEmailData {
+  bookingId: string;
+  sessionTitle: string;
+  scheduledStart: Date | string;
+  scheduledEnd: Date | string;
+  clientName: string;
+  clientEmail: string;
+  creatorName: string;
+  creatorEmail: string;
+  creatorTimezone: string;
+  priceInPaise: number;
+}
+
+export function generateIcsAttachment({
+  bookingId,
+  sessionTitle,
+  scheduledStart,
+  scheduledEnd,
+  clientName,
+  clientEmail,
+  creatorName,
+  creatorEmail,
+}: {
+  bookingId: string;
+  sessionTitle: string;
+  scheduledStart: Date | string;
+  scheduledEnd: Date | string;
+  clientName: string;
+  clientEmail: string;
+  creatorName: string;
+  creatorEmail: string;
+}): string {
+  const startUtc = new Date(scheduledStart)
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d{3}/, "");
+  const endUtc = new Date(scheduledEnd)
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d{3}/, "");
+  const nowUtc = new Date()
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d{3}/, "");
+
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//SessionBook//Booking System//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:REQUEST",
+    "BEGIN:VEVENT",
+    `UID:booking-${bookingId}@sessionbook.com`,
+    `DTSTAMP:${nowUtc}`,
+    `DTSTART:${startUtc}`,
+    `DTEND:${endUtc}`,
+    `SUMMARY:1:1 Session: ${sessionTitle} with ${creatorName}`,
+    `DESCRIPTION:1:1 Consultation Session via SessionBook\\nAttendee: ${clientName}`,
+    `ORGANIZER;CN=${creatorName}:mailto:${creatorEmail}`,
+    `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=${clientName}:mailto:${clientEmail}`,
+    "STATUS:CONFIRMED",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+}
+
+export async function sendBookingConfirmationEmail(data: BookingEmailData) {
+  const start = new Date(data.scheduledStart);
+  const formattedDate = format(start, "EEEE, MMMM d, yyyy");
+  const formattedTime = format(start, "h:mm a");
+  const priceRupees = (data.priceInPaise / 100).toLocaleString("en-IN");
+  const creatorPayoutRupees = (Math.round(data.priceInPaise * 0.96) / 100).toLocaleString("en-IN");
+
+  const ics = generateIcsAttachment({
+    bookingId: data.bookingId,
+    sessionTitle: data.sessionTitle,
+    scheduledStart: data.scheduledStart,
+    scheduledEnd: data.scheduledEnd,
+    clientName: data.clientName,
+    clientEmail: data.clientEmail,
+    creatorName: data.creatorName,
+    creatorEmail: data.creatorEmail,
+  });
+
+  const icsBase64 = Buffer.from(ics).toString("base64");
+
+  // In local test mode without Resend API Key, log formatted preview
+  if (!resend) {
+    console.log("-----------------------------------------");
+    console.log(`[EMAIL DISPATCH SIMULATION (Resend not configured)]`);
+    console.log(`To Client: ${data.clientEmail}`);
+    console.log(`Subject: Confirmed: 1:1 Session with ${data.creatorName}`);
+    console.log(`Date & Time: ${formattedDate} at ${formattedTime}`);
+    console.log(`To Creator: ${data.creatorEmail}`);
+    console.log(`Subject: New Booking: ${data.clientName} booked ${data.sessionTitle}`);
+    console.log(`Creator Payout: ₹${creatorPayoutRupees} (after 4% commission)`);
+    console.log("-----------------------------------------");
+    return;
+  }
+
+  // 1. Email to Client
+  await resend.emails.send({
+    from: fromEmail,
+    to: data.clientEmail,
+    subject: `Confirmed: 1:1 Session with ${data.creatorName}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
+        <h2 style="color: #4f46e5;">Your 1:1 session is confirmed!</h2>
+        <p>Hi ${data.clientName},</p>
+        <p>Your session with <strong>${data.creatorName}</strong> has been successfully booked.</p>
+        
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 20px 0;">
+          <p style="margin: 4px 0;"><strong>Session:</strong> ${data.sessionTitle}</p>
+          <p style="margin: 4px 0;"><strong>Date:</strong> ${formattedDate}</p>
+          <p style="margin: 4px 0;"><strong>Time:</strong> ${formattedTime}</p>
+          <p style="margin: 4px 0;"><strong>Amount Paid:</strong> ₹${priceRupees}</p>
+        </div>
+
+        <p>A calendar invitation (.ics) is attached to this email so you can add it directly to Google Calendar or Apple Calendar.</p>
+        <p style="color: #64748b; font-size: 13px; margin-top: 30px;">Best regards,<br/>SessionBook Team</p>
+      </div>
+    `,
+    attachments: [
+      {
+        filename: "session-invite.ics",
+        content: icsBase64,
+      },
+    ],
+  });
+
+  // 2. Email to Creator
+  await resend.emails.send({
+    from: fromEmail,
+    to: data.creatorEmail,
+    subject: `New Booking: ${data.clientName} booked ${data.sessionTitle}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
+        <h2 style="color: #4f46e5;">You have a new booking!</h2>
+        <p>Hi ${data.creatorName},</p>
+        <p><strong>${data.clientName}</strong> has booked a 1:1 session with you.</p>
+        
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 20px 0;">
+          <p style="margin: 4px 0;"><strong>Session:</strong> ${data.sessionTitle}</p>
+          <p style="margin: 4px 0;"><strong>Date:</strong> ${formattedDate}</p>
+          <p style="margin: 4px 0;"><strong>Time:</strong> ${formattedTime} (${data.creatorTimezone})</p>
+          <p style="margin: 4px 0;"><strong>Client Email:</strong> ${data.clientEmail}</p>
+          <p style="margin: 4px 0;"><strong>Your Payout (96%):</strong> ₹${creatorPayoutRupees}</p>
+          <p style="margin: 4px 0; color: #64748b; font-size: 12px;">(Platform retained 4% fee)</p>
+        </div>
+
+        <p>The calendar invitation is attached. Manage your bookings anytime from your creator dashboard.</p>
+        <p style="color: #64748b; font-size: 13px; margin-top: 30px;">Best regards,<br/>SessionBook Team</p>
+      </div>
+    `,
+    attachments: [
+      {
+        filename: "session-invite.ics",
+        content: icsBase64,
+      },
+    ],
+  });
+}
