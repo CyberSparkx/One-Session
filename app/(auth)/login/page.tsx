@@ -8,8 +8,8 @@ import { Sparkles, ArrowRight, Lock, Mail, AlertCircle, CheckCircle2, ShieldChec
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 
 const BRAND_HIGHLIGHTS = [
-  { icon: ShieldCheck, text: "Razorpay-verified secure payments" },
-  { icon: Zap, text: "Live and earning in under 10 minutes" },
+  { icon: ShieldCheck, text: "Razorpay-verified secure payouts" },
+  { icon: Zap, text: "Live & accepting bookings in under 5 minutes" },
   { icon: TrendingUp, text: "Keep 96% of every session fee" },
 ];
 
@@ -46,115 +46,79 @@ function LoginForm() {
   };
 
   return (
-    <div
-      className="min-h-[100dvh] flex"
-      style={{ background: "var(--bg-base)", color: "var(--text-primary)" }}
-    >
+    <div className="min-h-[100dvh] flex bg-[#FAFAFA] text-gray-900">
       {/* ── Left: Brand panel (hidden on mobile) ── */}
-      <div
-        className="hidden lg:flex lg:w-[46%] flex-col justify-between p-12 relative overflow-hidden"
-        style={{
-          background: "linear-gradient(145deg, #0c1222 0%, #050811 100%)",
-          borderRight: "1px solid var(--glass-border)",
-        }}
-      >
-        {/* Background orbs */}
+      <div className="hidden lg:flex lg:w-[45%] flex-col justify-between p-12 relative bg-white border-r border-gray-200">
+        {/* Subtle top ambient glow */}
         <div
-          className="absolute top-0 left-0 w-96 h-96 rounded-full opacity-30 orb-1"
+          className="absolute top-0 left-0 w-full h-80 opacity-40 pointer-events-none"
           style={{
-            background: "radial-gradient(circle, rgba(99,102,241,0.3) 0%, transparent 70%)",
-            filter: "blur(60px)",
-          }}
-        />
-        <div
-          className="absolute bottom-0 right-0 w-80 h-80 rounded-full opacity-20 orb-2"
-          style={{
-            background: "radial-gradient(circle, rgba(15,118,110,0.4) 0%, transparent 70%)",
-            filter: "blur(50px)",
+            background: "radial-gradient(ellipse at 20% 0%, rgba(249,115,22,0.12) 0%, transparent 70%)",
           }}
         />
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 relative z-10">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{
-              background: "linear-gradient(135deg, #6366f1 0%, #0f766e 100%)",
-              boxShadow: "0 4px 20px rgba(99,102,241,0.4)",
-            }}
-          >
-            <Sparkles className="w-5 h-5 text-white" />
+        <Link href="/" className="flex items-center gap-2.5 relative z-10">
+          <div className="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center text-white shadow-xs">
+            <Sparkles className="w-4 h-4" />
           </div>
-          <span className="font-800 text-xl text-white tracking-tight">SessionBook</span>
+          <span className="font-extrabold text-xl text-gray-950 tracking-tight">SessionBook</span>
         </Link>
 
         {/* Center content */}
-        <div className="relative z-10 space-y-8">
+        <div className="relative z-10 space-y-8 max-w-md">
           <div>
-            <h2 className="text-3xl font-800 text-white leading-tight tracking-tight">
+            <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200 inline-block mb-3">
+              Creator Platform
+            </span>
+            <h2 className="text-3xl font-extrabold text-gray-950 leading-tight tracking-tight">
               Monetize your expertise,{" "}
-              <span className="gradient-text">one session at a time</span>
+              <span className="text-orange-600">one session at a time</span>.
             </h2>
-            <p className="mt-4 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-              Join hundreds of creators, mentors, and consultants earning from their 1:1 time.
+            <p className="mt-3 text-sm text-gray-500 leading-relaxed">
+              Join hundreds of creators, mentors, and consultants earning from their 1:1 time with zero scheduling friction.
             </p>
           </div>
 
           <div className="space-y-3">
             {BRAND_HIGHLIGHTS.map(({ icon: Icon, text }) => (
               <div key={text} className="flex items-center gap-3">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: "rgba(99,102,241,0.15)",
-                    border: "1px solid rgba(99,102,241,0.25)",
-                    color: "#a5b4fc",
-                  }}
-                >
+                <div className="w-8 h-8 rounded-lg bg-orange-50 border border-orange-200 text-orange-600 flex items-center justify-center flex-shrink-0">
                   <Icon className="w-4 h-4" />
                 </div>
-                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{text}</p>
+                <p className="text-xs font-semibold text-gray-700">{text}</p>
               </div>
             ))}
           </div>
 
           {/* Stat strip */}
-          <div
-            className="glass-card p-4 flex items-center gap-4"
-            style={{ borderColor: "rgba(99,102,241,0.2)" }}
-          >
+          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex items-center justify-between shadow-xs">
             <div className="text-center flex-1">
-              <p className="text-xl font-800 text-white">2,400+</p>
-              <p className="text-[10px] font-600 uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+              <p className="text-xl font-extrabold text-gray-950">2,400+</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
                 Sessions
               </p>
             </div>
-            <div
-              className="w-px h-10 self-center"
-              style={{ background: "var(--glass-border)" }}
-            />
+            <div className="w-px h-8 bg-gray-200" />
             <div className="text-center flex-1">
-              <p className="text-xl font-800 text-white">₹1.2Cr+</p>
-              <p className="text-[10px] font-600 uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+              <p className="text-xl font-extrabold text-gray-950">₹1.2Cr+</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
                 Paid Out
               </p>
             </div>
-            <div
-              className="w-px h-10 self-center"
-              style={{ background: "var(--glass-border)" }}
-            />
+            <div className="w-px h-8 bg-gray-200" />
             <div className="text-center flex-1">
-              <p className="text-xl font-800 text-white">4.9★</p>
-              <p className="text-[10px] font-600 uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
-                Rating
+              <p className="text-xl font-extrabold text-gray-950">96%</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                Creator Cut
               </p>
             </div>
           </div>
         </div>
 
         {/* Bottom */}
-        <p className="text-xs relative z-10" style={{ color: "var(--text-muted)" }}>
-          © 2026 SessionBook · Secure by Razorpay
+        <p className="text-xs text-gray-400 relative z-10">
+          © 2026 SessionBook · Secured by Razorpay
         </p>
       </div>
 
@@ -162,67 +126,47 @@ function LoginForm() {
       <div className="flex-1 flex items-center justify-center px-5 py-10 lg:px-16">
         <div className="w-full max-w-md">
           {/* Mobile logo */}
-          <Link href="/" className="flex items-center gap-2.5 mb-10 lg:hidden">
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #6366f1, #0f766e)" }}
-            >
-              <Sparkles className="w-5 h-5 text-white" />
+          <Link href="/" className="flex items-center gap-2.5 mb-8 lg:hidden">
+            <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center text-white">
+              <Sparkles className="w-4 h-4" />
             </div>
-            <span className="font-800 text-xl text-white">SessionBook</span>
+            <span className="font-extrabold text-lg text-gray-950">SessionBook</span>
           </Link>
 
-          <div className="mb-8">
-            <h1 className="text-2xl sm:text-3xl font-800 text-white tracking-tight">
+          <div className="mb-6">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-950 tracking-tight">
               Welcome back
             </h1>
-            <p className="text-sm mt-1.5" style={{ color: "var(--text-muted)" }}>
-              Sign in to manage your sessions and earnings.
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">
+              Sign in to manage your sessions, calendar, and payouts.
             </p>
           </div>
 
           {/* Alerts */}
           {registered && (
-            <div
-              className="mb-6 p-4 rounded-2xl flex items-center gap-3 text-sm"
-              style={{
-                background: "rgba(16,185,129,0.1)",
-                border: "1px solid rgba(16,185,129,0.25)",
-                color: "#10b981",
-              }}
-            >
+            <div className="mb-5 p-3.5 rounded-xl flex items-center gap-2.5 text-xs font-medium bg-emerald-50 border border-emerald-200 text-emerald-700">
               <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-              <span>Account created! Please sign in.</span>
+              <span>Account created successfully! Please sign in.</span>
             </div>
           )}
           {error && (
-            <div
-              className="mb-6 p-4 rounded-2xl flex items-center gap-3 text-sm"
-              style={{
-                background: "rgba(239,68,68,0.1)",
-                border: "1px solid rgba(239,68,68,0.25)",
-                color: "#f87171",
-              }}
-            >
+            <div className="mb-5 p-3.5 rounded-xl flex items-center gap-2.5 text-xs font-medium bg-red-50 border border-red-200 text-red-600">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {/* Card */}
-          <div className="glass-card p-7 space-y-5">
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 space-y-5 shadow-xs">
             <GoogleSignInButton text="Continue with Google" callbackUrl={callbackUrl} />
 
             {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t" style={{ borderColor: "var(--glass-border)" }} />
+                <div className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span
-                  className="px-3 text-[11px] font-600 uppercase tracking-wider"
-                  style={{ background: "var(--bg-surface)", color: "var(--text-muted)" }}
-                >
+                <span className="px-3 text-[11px] font-semibold uppercase tracking-wider bg-white text-gray-400">
                   Or with email
                 </span>
               </div>
@@ -231,11 +175,11 @@ function LoginForm() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email */}
               <div>
-                <label className="block text-xs font-700 uppercase tracking-wider mb-2" style={{ color: "var(--text-secondary)" }}>
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 absolute left-3.5 top-3.5" style={{ color: "var(--text-muted)" }} />
+                  <Mail className="w-4 h-4 absolute left-3.5 top-3 text-gray-400" />
                   <input
                     id="login-email"
                     type="email"
@@ -243,25 +187,18 @@ function LoginForm() {
                     placeholder="you@domain.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all"
-                    style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid var(--glass-border)",
-                      color: "var(--text-primary)",
-                    }}
-                    onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                    onBlur={(e) => (e.target.style.borderColor = "var(--glass-border)")}
+                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-xs focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                   />
                 </div>
               </div>
 
               {/* Password */}
               <div>
-                <label className="block text-xs font-700 uppercase tracking-wider mb-2" style={{ color: "var(--text-secondary)" }}>
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 absolute left-3.5 top-3.5" style={{ color: "var(--text-muted)" }} />
+                  <Lock className="w-4 h-4 absolute left-3.5 top-3 text-gray-400" />
                   <input
                     id="login-password"
                     type="password"
@@ -269,14 +206,7 @@ function LoginForm() {
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl text-sm focus:outline-none transition-all"
-                    style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid var(--glass-border)",
-                      color: "var(--text-primary)",
-                    }}
-                    onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-                    onBlur={(e) => (e.target.style.borderColor = "var(--glass-border)")}
+                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-xs focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                   />
                 </div>
               </div>
@@ -285,10 +215,10 @@ function LoginForm() {
                 id="login-submit"
                 type="submit"
                 disabled={isLoading}
-                className="btn-primary w-full justify-center py-3.5 text-sm mt-2"
+                className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 transition-all shadow-xs shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer mt-2"
               >
                 {isLoading ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
                     <span>Sign In</span>
@@ -299,14 +229,13 @@ function LoginForm() {
             </form>
           </div>
 
-          <p className="text-center text-sm mt-6" style={{ color: "var(--text-muted)" }}>
-            No account yet?{" "}
+          <p className="text-center text-xs text-gray-500 mt-6">
+            Don't have an account?{" "}
             <Link
               href="/signup"
-              className="font-700 transition-colors"
-              style={{ color: "#a5b4fc" }}
+              className="font-bold text-orange-600 hover:text-orange-700 transition-colors"
             >
-              Create creator account
+              Sign up as a creator
             </Link>
           </p>
         </div>
@@ -318,8 +247,8 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg-base)" }}>
-        <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
       </div>
     }>
       <LoginForm />
