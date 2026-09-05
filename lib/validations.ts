@@ -24,7 +24,7 @@ export const CreatorProfileSchema = z.object({
   timezone: z.string().min(1, "Timezone is required"),
   isPublished: z.boolean().default(false),
   payoutMethod: z.enum(["bank", "upi", "razorpay_route"]).optional().nullable(),
-  payoutDetails: z.record(z.any()).optional().nullable(),
+  payoutDetails: z.record(z.string(), z.any()).optional().nullable(),
 });
 
 export const SessionTypeSchema = z.object({
