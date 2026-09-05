@@ -1,6 +1,6 @@
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -8,27 +8,27 @@ generator client {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  role          String   @default("CREATOR")
-  name          String
-  email         String   @unique
-  phone         String?
-  passwordHash  String?
-  timezone      String   @default("Asia/Kolkata")
-  createdAt     DateTime @default(now())
+  id             String          @id @default(auto()) @map("_id") @db.ObjectId
+  role           String          @default("CREATOR") // "ADMIN" | "CREATOR"
+  name           String
+  email          String          @unique
+  phone          String?
+  passwordHash   String?
+  timezone       String          @default("Asia/Kolkata")
+  createdAt      DateTime        @default(now())
   creatorProfile CreatorProfile?
 }
 
 model CreatorProfile {
-  id                    String                 @id @default(cuid())
-  userId                String                 @unique
+  id                    String                 @id @default(auto()) @map("_id") @db.ObjectId
+  userId                String                 @unique @db.ObjectId
   user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   slug                  String                 @unique
   bio                   String?
   avatarUrl             String?
   isPublished           Boolean                @default(false)
   payoutMethod          String?                // "bank" | "upi" | "razorpay_route"
-  payoutDetails         String?                // JSON string: account no, IFSC, UPI id, or Route linked_account_id
+  payoutDetails         String?                // JSON string: account no, IFSC, UPI id, etc.
   sessionTypes          SessionType[]
   availabilityRules     AvailabilityRule[]
   availabilityOverrides AvailabilityOverride[]
@@ -36,8 +36,8 @@ model CreatorProfile {
 }
 
 model SessionType {
-  id              String         @id @default(cuid())
-  creatorId       String
+  id              String         @id @default(auto()) @map("_id") @db.ObjectId
+  creatorId       String         @db.ObjectId
   creator         CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   title           String
   description     String?
@@ -50,8 +50,8 @@ model SessionType {
 }
 
 model AvailabilityRule {
-  id        String         @id @default(cuid())
-  creatorId String
+  id        String         @id @default(auto()) @map("_id") @db.ObjectId
+  creatorId String         @db.ObjectId
   creator   CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   dayOfWeek Int            // 0 = Sunday .. 6 = Saturday
   startTime String         // "10:00" in creator's local timezone
@@ -59,8 +59,8 @@ model AvailabilityRule {
 }
 
 model AvailabilityOverride {
-  id        String         @id @default(cuid())
-  creatorId String
+  id        String         @id @default(auto()) @map("_id") @db.ObjectId
+  creatorId String         @db.ObjectId
   creator   CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   date      DateTime       // specific calendar date
   isBlocked Boolean        @default(true) // true = day off; false = extra opening w/ startTime/endTime
@@ -69,10 +69,10 @@ model AvailabilityOverride {
 }
 
 model Booking {
-  id             String         @id @default(cuid())
-  sessionTypeId  String
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  sessionTypeId  String         @db.ObjectId
   sessionType    SessionType    @relation(fields: [sessionTypeId], references: [id])
-  creatorId      String
+  creatorId      String         @db.ObjectId
   creator        CreatorProfile @relation(fields: [creatorId], references: [id])
   clientName     String
   clientEmail    String
@@ -81,14 +81,14 @@ model Booking {
   scheduledStart DateTime       // stored UTC
   scheduledEnd   DateTime       // stored UTC
   status         String         @default("PENDING_PAYMENT") // PENDING_PAYMENT, CONFIRMED, CANCELLED, REFUNDED, COMPLETED
-  cancelToken    String         @unique @default(cuid())
+  cancelToken    String         @unique @default(uuid())
   createdAt      DateTime       @default(now())
   payment        Payment?
 }
 
 model Payment {
-  id                 String   @id @default(cuid())
-  bookingId          String   @unique
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  bookingId          String   @unique @db.ObjectId
   booking            Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   razorpayOrderId    String
   razorpayPaymentId  String?
