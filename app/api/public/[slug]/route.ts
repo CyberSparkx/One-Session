@@ -21,6 +21,12 @@ export async function GET(
           where: { isActive: true },
           orderBy: { priceInPaise: "asc" },
         },
+        availabilityRules: {
+          select: { dayOfWeek: true, startTime: true, endTime: true },
+        },
+        availabilityOverrides: {
+          select: { date: true, isBlocked: true, startTime: true, endTime: true },
+        },
       },
     });
 
@@ -35,6 +41,10 @@ export async function GET(
       );
     }
 
+    const availableDaysOfWeek = Array.from(
+      new Set(profile.availabilityRules.map((r) => r.dayOfWeek))
+    );
+
     return NextResponse.json({
       name: profile.user.name,
       slug: profile.slug,
@@ -42,6 +52,11 @@ export async function GET(
       avatarUrl: profile.avatarUrl,
       timezone: profile.user.timezone,
       sessionTypes: profile.sessionTypes,
+      availableDaysOfWeek,
+      availabilityOverrides: profile.availabilityOverrides.map((o) => ({
+        date: o.date.toISOString().split("T")[0],
+        isBlocked: o.isBlocked,
+      })),
     });
   } catch (error: any) {
     console.error("GET /api/public/[slug] error:", error);

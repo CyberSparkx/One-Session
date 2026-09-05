@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, useMemo, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -120,9 +120,50 @@ export default function BookingPage({
     loadSlots();
   }, [selectedDate, slug, sessionTypeId]);
 
-  // Generate 14 days view (2 full weeks)
-  const daysToShow = Array.from({ length: 14 }, (_, i) =>
-    addDays(today, calendarOffset * 7 + i)
+  // Helper to check if a specific calendar date is an open day for this creator
+  const isDayAvailable = (date: Date) => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    // 1. Check if there is a specific date override
+    const override = creator?.availabilityOverrides?.find((o: any) => o.date === dateStr);
+    if (override) {
+      return !override.isBlocked;
+    }
+    // 2. Check recurring day of week (0 = Sun, 1 = Mon ... 6 = Sat)
+    const dayOfWeek = date.getDay();
+    if (creator?.availableDaysOfWeek && creator.availableDaysOfWeek.length > 0) {
+      return creator.availableDaysOfWeek.includes(dayOfWeek);
+    }
+    return true; // Default fallback if no rules configured
+  };
+
+  // Collect upcoming available days within the next 90 days
+  const allAvailableDates = useMemo(() => {
+    if (!creator) return [];
+    const dates: Date[] = [];
+    for (let i = 0; i < 90; i++) {
+      const d = addDays(today, i);
+      if (isDayAvailable(d)) {
+        dates.push(d);
+      }
+    }
+    return dates;
+  }, [creator, today]);
+
+  // When available dates load, automatically select the first open date
+  useEffect(() => {
+    if (allAvailableDates.length > 0) {
+      const isCurrentSelectedAvailable = allAvailableDates.some((d) => isSameDay(d, selectedDate));
+      if (!isCurrentSelectedAvailable) {
+        setSelectedDate(allAvailableDates[0]);
+      }
+    }
+  }, [allAvailableDates, selectedDate]);
+
+  const DATES_PER_PAGE = 6;
+  const totalPages = Math.max(1, Math.ceil(allAvailableDates.length / DATES_PER_PAGE));
+  const currentDatesToShow = allAvailableDates.slice(
+    calendarOffset * DATES_PER_PAGE,
+    (calendarOffset + 1) * DATES_PER_PAGE
   );
 
   const handleBookingSubmit = async (e: React.FormEvent) => {
@@ -408,61 +449,80 @@ export default function BookingPage({
           {/* Right Column: Date & Slot Picker */}
           <div className="lg:col-span-7 space-y-6">
             <div className="p-6 rounded-2xl bg-slate-900/70 border border-slate-800 shadow-xl space-y-6">
-              {/* Date selector header with prev/next week pagination */}
+              {/* Date selector header with open dates pagination */}
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-base font-semibold text-white">Select Date & Time</h2>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Times shown in creator's timezone: <span className="text-indigo-400">{creator.timezone}</span>
+                    Showing available dates only • Times in <span className="text-indigo-400">{creator.timezone}</span>
                   </p>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setCalendarOffset((prev) => Math.max(0, prev - 1))}
-                    disabled={calendarOffset === 0}
-                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-slate-300 transition-colors"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setCalendarOffset((prev) => prev + 1)}
-                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Day selection strip */}
-              <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-                {daysToShow.map((day) => {
-                  const isSelected = isSameDay(day, selectedDate);
-                  const isPastDate = isPast(day) && !isToday(day);
-
-                  return (
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-medium text-slate-400">
+                      Page {calendarOffset + 1} of {totalPages}
+                    </span>
                     <button
-                      key={day.toISOString()}
-                      type="button"
-                      disabled={isPastDate}
-                      onClick={() => setSelectedDate(day)}
-                      className={`p-2 sm:p-2.5 rounded-xl flex flex-col items-center justify-center transition-all cursor-pointer ${
-                        isSelected
-                          ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 font-bold"
-                          : isPastDate
-                          ? "opacity-30 cursor-not-allowed bg-slate-950/30 text-slate-600"
-                          : "bg-slate-950/60 hover:bg-slate-800/80 text-slate-300 border border-slate-800/80"
-                      }`}
+                      onClick={() => setCalendarOffset((prev) => Math.max(0, prev - 1))}
+                      disabled={calendarOffset === 0}
+                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-slate-300 transition-colors cursor-pointer"
                     >
-                      <span className="text-[10px] uppercase font-medium">
-                        {format(day, "EEE")}
-                      </span>
-                      <span className="text-sm sm:text-base font-bold mt-0.5">
-                        {format(day, "d")}
-                      </span>
+                      <ChevronLeft className="w-4 h-4" />
                     </button>
-                  );
-                })}
+                    <button
+                      onClick={() => setCalendarOffset((prev) => Math.min(totalPages - 1, prev + 1))}
+                      disabled={calendarOffset >= totalPages - 1}
+                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-slate-300 transition-colors cursor-pointer"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
+
+              {/* Day selection strip — ONLY open days are displayed */}
+              {allAvailableDates.length === 0 ? (
+                <div className="py-8 px-4 rounded-xl bg-slate-950/40 border border-slate-800 text-center">
+                  <p className="text-xs text-slate-400">No open dates available in the near future.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-2.5">
+                  {currentDatesToShow.map((day) => {
+                    const isSelected = isSameDay(day, selectedDate);
+                    const isTodayDate = isToday(day);
+
+                    return (
+                      <button
+                        key={day.toISOString()}
+                        type="button"
+                        onClick={() => setSelectedDate(day)}
+                        className={`p-3 rounded-2xl flex flex-col items-center justify-center transition-all cursor-pointer border ${
+                          isSelected
+                            ? "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-600/30 scale-[1.02]"
+                            : "bg-slate-950/60 border-slate-800/80 hover:border-indigo-500/40 text-slate-300 hover:bg-slate-800/50"
+                        }`}
+                      >
+                        <span className={`text-[11px] uppercase font-bold tracking-wider ${isSelected ? "text-indigo-200" : "text-indigo-400"}`}>
+                          {format(day, "EEE")}
+                        </span>
+                        <span className="text-base sm:text-lg font-extrabold mt-0.5">
+                          {format(day, "d")}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium mt-0.5">
+                          {format(day, "MMM")}
+                        </span>
+                        {isTodayDate && (
+                          <span className={`mt-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                            isSelected ? "bg-white/20 text-white" : "bg-indigo-500/20 text-indigo-300"
+                          }`}>
+                            Today
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Available Slots Section */}
               <div className="space-y-3 pt-3 border-t border-slate-800/80">
