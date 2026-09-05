@@ -67,6 +67,12 @@ export default function BookingPage({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const isFormValid =
+    Boolean(selectedSlot) &&
+    Boolean(formData.clientName.trim()) &&
+    Boolean(formData.clientEmail.trim()) &&
+    Boolean(formData.clientPhone.trim());
+
   // Fetch creator and session type data
   useEffect(() => {
     async function loadData() {
@@ -168,7 +174,21 @@ export default function BookingPage({
           theme: {
             color: "#6366f1",
           },
-          handler: function (response: any) {
+          handler: async function (response: any) {
+            try {
+              await fetch("/api/bookings/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  bookingId: data.bookingId,
+                  razorpayOrderId: response.razorpay_order_id,
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  razorpaySignature: response.razorpay_signature,
+                }),
+              });
+            } catch (err) {
+              console.error("Verification error:", err);
+            }
             router.push(`/booking/${data.bookingId}/confirmation`);
           },
           modal: {
@@ -501,7 +521,7 @@ export default function BookingPage({
                 <button
                   type="submit"
                   form="booking-form"
-                  disabled={!selectedSlot || submitting}
+                  disabled={!isFormValid || submitting}
                   className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium text-sm shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {submitting ? (
@@ -513,6 +533,15 @@ export default function BookingPage({
                     </>
                   )}
                 </button>
+
+                {!isFormValid && (
+                  <p className="text-[11px] text-center text-amber-400/90 font-medium">
+                    {!selectedSlot
+                      ? "👉 Please select an available time slot above."
+                      : "👉 Please fill in your name, email, and phone number to enable payment."}
+                  </p>
+                )}
+
                 <p className="text-[11px] text-center text-slate-500">
                   Payments are 100% secure via Razorpay. Your slot is reserved immediately upon payment.
                 </p>

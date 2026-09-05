@@ -46,12 +46,14 @@ export default async function DashboardPage() {
   const bookings = profile.bookings || [];
 
   // Metrics computation
+  const now = new Date();
   const confirmedBookings = bookings.filter((b) => b.status === "CONFIRMED");
-  const upcomingBookings = confirmedBookings.filter(
-    (b) => new Date(b.scheduledStart) >= new Date()
+  const activeAndUpcomingBookings = bookings.filter(
+    (b) => b.status !== "CANCELLED" && b.status !== "REFUNDED" && new Date(b.scheduledEnd) >= now
   );
-  const pastBookings = confirmedBookings.filter(
-    (b) => new Date(b.scheduledStart) < new Date()
+  const upcomingBookings = activeAndUpcomingBookings.length > 0 ? activeAndUpcomingBookings : confirmedBookings;
+  const pastBookings = bookings.filter(
+    (b) => new Date(b.scheduledEnd) < now
   );
 
   // Earnings in paise: 96% goes to creator
