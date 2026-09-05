@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   ExternalLink,
   Plus,
+  AlertTriangle,
 } from "lucide-react";
 import { format } from "date-fns";
 import CancelSessionButton from "@/components/CancelSessionButton";
@@ -58,15 +59,18 @@ export default async function DashboardPage() {
     return sum;
   }, 0);
 
-  const pendingPayoutPaise = confirmedBookings.reduce((sum, b) => {
+  const rawPendingPayoutPaise = confirmedBookings.reduce((sum, b) => {
     if (b.payment && b.payment.status === "CAPTURED" && b.payment.payoutStatus === "NOT_PAID_OUT") {
       return sum + b.payment.creatorPayoutPaise;
     }
     return sum;
   }, 0);
 
+  const balanceAdjustmentPaise = profile.balanceAdjustmentPaise || 0;
+  const netPendingPayoutPaise = Math.max(0, rawPendingPayoutPaise + balanceAdjustmentPaise);
+
   const totalEarningsInRupees = (totalEarningsPaise / 100).toLocaleString("en-IN");
-  const pendingPayoutInRupees = (pendingPayoutPaise / 100).toLocaleString("en-IN");
+  const pendingPayoutInRupees = (netPendingPayoutPaise / 100).toLocaleString("en-IN");
 
   const METRICS = [
     {
@@ -79,7 +83,9 @@ export default async function DashboardPage() {
     {
       label: "Pending Payout",
       value: `₹${pendingPayoutInRupees}`,
-      sub: "Auto-processed weekly",
+      sub: balanceAdjustmentPaise < 0
+        ? `Includes -₹${Math.abs(balanceAdjustmentPaise / 100).toLocaleString("en-IN")} fee debit`
+        : "Auto-processed weekly",
       icon: Clock,
       iconBg: "bg-amber-50 text-amber-600 border-amber-200",
     },
@@ -134,6 +140,23 @@ export default async function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* Fee adjustment notice if creator has outstanding balance debit */}
+      {balanceAdjustmentPaise < 0 && (
+        <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-900 shadow-xs">
+          <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0 text-amber-700">
+            <AlertTriangle className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="font-bold">
+              Outstanding Platform Fee Adjustment: -₹{Math.abs(balanceAdjustmentPaise / 100).toLocaleString("en-IN")}
+            </p>
+            <p className="text-[11px] text-amber-700 mt-0.5">
+              This 4% fee from a previous full-refund session cancellation will automatically be offset against your upcoming session payouts.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── Metric Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -257,6 +280,7 @@ export default async function DashboardPage() {
                       bookingId={booking.id}
                       clientName={booking.clientName}
                       sessionTitle={booking.sessionType.title}
+                      priceInPaise={booking.sessionType.priceInPaise}
                       variant="button"
                     />
                   </div>

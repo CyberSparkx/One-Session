@@ -358,6 +358,7 @@ export default function CalendarClientView({
                               bookingId={b.id}
                               clientName={b.clientName}
                               sessionTitle={b.sessionTitle}
+                              priceInPaise={b.priceInPaise}
                               variant="icon"
                               onSuccess={() => {
                                 setBookingList((prev) => prev.filter((item) => item.id !== b.id));

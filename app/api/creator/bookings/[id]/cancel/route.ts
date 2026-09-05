@@ -111,7 +111,7 @@ export async function POST(
       }
 
       // 3. Debit creator's account balance for the 4% fee if Full Refund was chosen
-      if (creatorFeeDebitPaise > 0) {
+      if (creatorFeeDebitPaise > 0 && user.creatorProfile) {
         await tx.creatorProfile.update({
           where: { id: user.creatorProfile.id },
           data: {
