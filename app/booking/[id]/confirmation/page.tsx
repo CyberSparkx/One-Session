@@ -17,6 +17,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 interface ConfirmationPageProps {
   params: Promise<{ id: string }>;
 }
@@ -48,23 +50,7 @@ export default async function BookingConfirmationPage({
   const { creator, sessionType, payment } = booking;
   const start = new Date(booking.scheduledStart);
   const end = new Date(booking.scheduledEnd);
-
-  // When landing on confirmation, ensure booking is confirmed and payment captured
-  if (booking.status === "PENDING_PAYMENT") {
-    await prisma.$transaction([
-      prisma.booking.update({
-        where: { id },
-        data: { status: "CONFIRMED" },
-      }),
-      prisma.payment.updateMany({
-        where: { bookingId: id },
-        data: { status: "CAPTURED" },
-      }),
-    ]);
-    booking.status = "CONFIRMED";
-  }
-
-  const isConfirmed = true;
+  const isConfirmed = booking.status === "CONFIRMED";
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
@@ -90,16 +76,41 @@ export default async function BookingConfirmationPage({
       <main className="relative z-10 flex-1 max-w-2xl w-full mx-auto px-4 py-10 md:py-16 space-y-8">
         {/* Status Banner */}
         <div className="text-center space-y-3">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/10">
-            <CheckCircle2 className="w-8 h-8" />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            {isConfirmed ? "Booking Confirmed!" : "Payment Processing"}
-          </h1>
-          <p className="text-sm text-slate-400 max-w-md mx-auto">
-            A confirmation email and calendar invitation have been sent to{" "}
-            <span className="text-slate-200 font-medium">{booking.clientEmail}</span>.
-          </p>
+          {isConfirmed ? (
+            <>
+              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/10">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                Booking Confirmed!
+              </h1>
+              <p className="text-sm text-slate-400 max-w-md mx-auto">
+                A confirmation email and calendar invitation have been sent to{" "}
+                <span className="text-slate-200 font-medium">{booking.clientEmail}</span>.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto shadow-xl shadow-amber-500/10">
+                <Clock className="w-8 h-8" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                Payment Pending / Incomplete
+              </h1>
+              <p className="text-sm text-slate-400 max-w-md mx-auto">
+                We have not received payment confirmation for this booking yet. If you completed payment, please refresh this page.
+              </p>
+              <div className="pt-2">
+                <Link
+                  href={`/u/${creator.slug}/book/${sessionType.id}`}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/25 transition-all"
+                >
+                  <span>Complete / Retry Payment</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Booking Details Card */}
@@ -152,18 +163,26 @@ export default async function BookingConfirmationPage({
               <div>
                 <p className="text-xs font-semibold text-white">Web Conferencing</p>
                 <p className="text-[11px] text-slate-400">
-                  Google Meet / conferencing link will activate at session time.
+                  {isConfirmed
+                    ? "Google Meet / conferencing link will activate at session time."
+                    : "Conferencing link will be generated once payment is confirmed."}
                 </p>
               </div>
             </div>
-            <a
-              href={`/api/bookings/${booking.id}/ics`}
-              download={`${sessionType.title.replace(/\s+/g, "_")}.ics`}
-              className="py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Add to Calendar</span>
-            </a>
+            {isConfirmed ? (
+              <a
+                href={`/api/bookings/${booking.id}/ics`}
+                download={`${sessionType.title.replace(/\s+/g, "_")}.ics`}
+                className="py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Add to Calendar</span>
+              </a>
+            ) : (
+              <span className="text-[11px] font-medium text-amber-400/80 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 shrink-0">
+                Awaiting Payment
+              </span>
+            )}
           </div>
 
           {/* Attendee Details */}

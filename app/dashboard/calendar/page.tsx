@@ -13,6 +13,9 @@ export default async function CalendarPage() {
       creatorProfile: {
         include: {
           bookings: {
+            where: {
+              status: { in: ["CONFIRMED", "COMPLETED"] },
+            },
             include: {
               sessionType: true,
               payment: true,

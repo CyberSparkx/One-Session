@@ -45,19 +45,20 @@ export default async function DashboardPage() {
   const profile = user.creatorProfile;
   const bookings = profile.bookings || [];
 
-  // Metrics computation
+  // Metrics computation: ONLY confirmed & paid sessions are included
   const now = new Date();
-  const confirmedBookings = bookings.filter((b) => b.status === "CONFIRMED");
-  const activeAndUpcomingBookings = bookings.filter(
-    (b) => b.status !== "CANCELLED" && b.status !== "REFUNDED" && new Date(b.scheduledEnd) >= now
+  const confirmedBookings = bookings.filter(
+    (b) => b.status === "CONFIRMED" || b.status === "COMPLETED"
   );
-  const upcomingBookings = activeAndUpcomingBookings.length > 0 ? activeAndUpcomingBookings : confirmedBookings;
-  const pastBookings = bookings.filter(
+  const upcomingBookings = confirmedBookings.filter(
+    (b) => new Date(b.scheduledEnd) >= now
+  );
+  const pastBookings = confirmedBookings.filter(
     (b) => new Date(b.scheduledEnd) < now
   );
 
-  // Earnings in paise: 96% goes to creator
-  const totalEarningsPaise = bookings.reduce((sum, b) => {
+  // Earnings in paise: 96% goes to creator for confirmed bookings
+  const totalEarningsPaise = confirmedBookings.reduce((sum, b) => {
     if (b.payment && (b.payment.status === "CAPTURED" || b.status === "CONFIRMED")) {
       return sum + (b.payment.creatorPayoutPaise || Math.round(b.sessionType.priceInPaise * 0.96));
     }

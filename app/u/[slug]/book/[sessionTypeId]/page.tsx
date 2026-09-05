@@ -175,6 +175,7 @@ export default function BookingPage({
             color: "#6366f1",
           },
           handler: async function (response: any) {
+            setSubmitting(true);
             try {
               await fetch("/api/bookings/verify", {
                 method: "POST",
@@ -199,6 +200,10 @@ export default function BookingPage({
         };
 
         const rzp = new window.Razorpay(options);
+        rzp.on("payment.failed", function (failResponse: any) {
+          setError(failResponse.error?.description || "Payment failed or was declined. Please try again.");
+          setSubmitting(false);
+        });
         rzp.open();
       } else {
         // Direct confirmation or test redirect
