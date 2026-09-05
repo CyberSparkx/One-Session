@@ -1,51 +1,31 @@
 import Link from "next/link";
+import prisma from "@/lib/prisma";
 import {
   ArrowRight,
   CalendarCheck2,
   IndianRupee,
   ShieldCheck,
   Clock,
-  Star,
   Zap,
   Video,
-  Copy,
-  TrendingUp,
   CheckCircle2,
   Users,
-  ChevronRight,
+  ExternalLink,
+  Sparkles,
 } from "lucide-react";
 
-/* ── Marquee items ─────────────────────────────────────────────────── */
-const MARQUEE_ITEMS = [
-  "Code Review", "Architecture Consulting", "Product Strategy", "UX Critique",
-  "Career Coaching", "Startup Mentorship", "Interview Prep", "Design Feedback",
-  "Growth Strategy", "Financial Planning", "Legal Advice", "Sales Coaching",
-  "Content Strategy", "AI/ML Consulting", "SEO Audit", "Brand Strategy",
-];
+export const dynamic = "force-dynamic";
 
-/* ── Testimonials ──────────────────────────────────────────────────── */
-const TESTIMONIALS = [
-  {
-    name: "Priya Kapoor",
-    role: "UX Designer",
-    avatar: "PK",
-    text: "I made ₹40,000 in my first month just from 1:1 design reviews. The booking flow is so clean that clients never drop off.",
-    sessions: 38,
-  },
-  {
-    name: "Arjun Mehta",
-    role: "Senior Engineer",
-    avatar: "AM",
-    text: "I charge ₹2,500/hr for code reviews. SessionBook handles everything — booking, payment, reminders. I just show up.",
-    sessions: 112,
-  },
-  {
-    name: "Shreya Nair",
-    role: "Product Manager",
-    avatar: "SN",
-    text: "My public booking page looks so professional that clients often assume I have a whole team behind it. It's just me.",
-    sessions: 67,
-  },
+/* ── Marquee items (Value propositions & guarantees) ────────────────── */
+const MARQUEE_ITEMS = [
+  "⚡ 96% Creator Take-Home",
+  "🔒 Razorpay Secured Payments",
+  "📅 Google Calendar Auto-Sync",
+  "💳 Direct UPI & NetBanking",
+  "🚀 ₹0 Monthly Subscription",
+  "✨ 4% Fee Only When Booked",
+  "⏱️ Automatic Google Meet Invites",
+  "🎯 1:1 Strategy & Mentorship",
 ];
 
 /* ── Features ──────────────────────────────────────────────────────── */
@@ -87,7 +67,48 @@ const STEPS = [
   { num: "04", title: "Get paid", desc: "Clients book and pay instantly. You keep 96% every time." },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  let publishedCreatorsCount = 0;
+  let completedSessionsCount = 0;
+  let publishedCreators: Array<{
+    id: string;
+    slug: string;
+    bio: string | null;
+    avatarUrl: string | null;
+    user: { name: string; email: string };
+    sessionTypes: Array<{
+      id: string;
+      title: string;
+      priceInPaise: number;
+      durationMinutes: number;
+    }>;
+  }> = [];
+
+  try {
+    const [creatorsCount, sessionsCount, creators] = await Promise.all([
+      prisma.creatorProfile.count({ where: { isPublished: true } }),
+      prisma.booking.count({ where: { status: { in: ["CONFIRMED", "COMPLETED"] } } }),
+      prisma.creatorProfile.findMany({
+        where: { isPublished: true },
+        include: {
+          user: { select: { name: true, email: true } },
+          sessionTypes: {
+            where: { isActive: true },
+            select: { id: true, title: true, priceInPaise: true, durationMinutes: true },
+          },
+        },
+        take: 6,
+      }),
+    ]);
+    publishedCreatorsCount = creatorsCount;
+    completedSessionsCount = sessionsCount;
+    publishedCreators = creators;
+  } catch (err) {
+    console.error("LandingPage database query error:", err);
+  }
+
+  const primaryCreator = publishedCreators[0] || null;
+
   return (
     <div style={{ background: "var(--bg-page)", color: "var(--text-primary)" }}>
 
@@ -112,7 +133,7 @@ export default function LandingPage() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
-            {["Features", "How it works", "Pricing"].map((item) => (
+            {["Features", "How it works", "Creators", "Pricing"].map((item) => (
               <a
                 key={item}
                 href={`#${item.toLowerCase().replace(/\s+/g, "-")}`}
@@ -150,7 +171,7 @@ export default function LandingPage() {
           {/* Top badge */}
           <div className="flex justify-center mb-8">
             <div className="badge animate-fade-up">
-              🇮🇳 Built for Indian Creators
+              🇮🇳 Built for Indian Creators · Zero Monthly Cost
             </div>
           </div>
 
@@ -235,13 +256,21 @@ export default function LandingPage() {
                   className="flex-1 mx-4 px-3 py-1 rounded-md text-xs font-mono"
                   style={{ background: "var(--bg-page)", color: "var(--text-muted)", border: "1px solid var(--border-base)" }}
                 >
-                  sessionbook.in/u/alex
+                  sessionbook.in/u/{primaryCreator ? primaryCreator.slug : "yourname"}
                 </div>
+                {primaryCreator && (
+                  <Link
+                    href={`/u/${primaryCreator.slug}`}
+                    className="text-[11px] font-semibold text-orange-600 flex items-center gap-1 hover:underline"
+                  >
+                    View Live <ExternalLink className="w-3 h-3" />
+                  </Link>
+                )}
               </div>
 
-              {/* Fake dashboard preview */}
+              {/* Creator dashboard preview */}
               <div
-                className="p-6 grid grid-cols-3 gap-4"
+                className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4"
                 style={{ background: "var(--bg-subtle)" }}
               >
                 {/* Sidebar preview */}
@@ -250,14 +279,22 @@ export default function LandingPage() {
                   style={{ background: "var(--bg-page)" }}
                 >
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-800"
-                      style={{ background: "var(--orange)" }}>A</div>
-                    <div>
-                      <div className="text-xs font-700" style={{ color: "var(--text-primary)" }}>Alex Rivers</div>
-                      <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>@alex</div>
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-800"
+                      style={{ background: "var(--orange)" }}
+                    >
+                      {primaryCreator ? primaryCreator.user.name[0].toUpperCase() : "Y"}
+                    </div>
+                    <div className="overflow-hidden">
+                      <div className="text-xs font-700 truncate" style={{ color: "var(--text-primary)" }}>
+                        {primaryCreator ? primaryCreator.user.name : "Your Creator Page"}
+                      </div>
+                      <div className="text-[10px] font-mono truncate" style={{ color: "var(--text-muted)" }}>
+                        @{primaryCreator ? primaryCreator.slug : "yourname"}
+                      </div>
                     </div>
                   </div>
-                  {["Home", "Bookings", "Sessions", "Calendar", "Payouts"].map((item, i) => (
+                  {["Overview", "Session Types", "Calendar Sync", "Payouts"].map((item, i) => (
                     <div
                       key={item}
                       className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-500"
@@ -274,35 +311,74 @@ export default function LandingPage() {
                 </div>
 
                 {/* Main content preview */}
-                <div className="col-span-2 space-y-3">
-                  <div className="text-sm font-800" style={{ color: "var(--text-primary)" }}>
-                    Hi, Alex 👋
+                <div className="md:col-span-2 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-800" style={{ color: "var(--text-primary)" }}>
+                      {primaryCreator ? `Creator Profile: ${primaryCreator.user.name}` : "Ready to Start Earning"}
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      Live & Verified
+                    </span>
                   </div>
+
                   <div className="grid grid-cols-3 gap-3">
-                    {[
-                      { label: "Sessions", val: "14" },
-                      { label: "Upcoming", val: "3" },
-                      { label: "Earnings", val: "₹8.4k" },
-                    ].map((m) => (
-                      <div key={m.label} className="card p-3">
-                        <div className="text-lg font-800" style={{ color: "var(--text-primary)" }}>{m.val}</div>
-                        <div className="text-[10px] font-500" style={{ color: "var(--text-muted)" }}>{m.label}</div>
+                    <div className="card p-3">
+                      <div className="text-lg font-800" style={{ color: "var(--text-primary)" }}>
+                        {primaryCreator ? primaryCreator.sessionTypes.length : 0}
                       </div>
-                    ))}
+                      <div className="text-[10px] font-500" style={{ color: "var(--text-muted)" }}>Session Types</div>
+                    </div>
+                    <div className="card p-3">
+                      <div className="text-lg font-800 text-emerald-600">96%</div>
+                      <div className="text-[10px] font-500" style={{ color: "var(--text-muted)" }}>Your Take-Home</div>
+                    </div>
+                    <div className="card p-3">
+                      <div className="text-lg font-800" style={{ color: "var(--orange)" }}>4%</div>
+                      <div className="text-[10px] font-500" style={{ color: "var(--text-muted)" }}>Platform Fee</div>
+                    </div>
                   </div>
+
+                  {/* Active sessions preview */}
                   <div className="card p-4">
-                    <div className="text-xs font-700 mb-2.5" style={{ color: "var(--text-primary)" }}>Recent Bookings</div>
-                    {[
-                      { name: "Priya Kapoor", session: "1:1 Consultation", price: "₹1,500" },
-                      { name: "Raj Patel", session: "Code Review", price: "₹2,500" },
-                    ].map((b) => (
-                      <div key={b.name} className="flex items-center justify-between py-1.5 border-t text-xs"
-                        style={{ borderColor: "var(--border-base)" }}>
-                        <span className="font-600" style={{ color: "var(--text-primary)" }}>{b.name}</span>
-                        <span style={{ color: "var(--text-muted)" }}>{b.session}</span>
-                        <span className="font-700" style={{ color: "var(--green)" }}>{b.price}</span>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <span className="text-xs font-700" style={{ color: "var(--text-primary)" }}>
+                        Bookable Sessions
+                      </span>
+                      {primaryCreator && (
+                        <Link
+                          href={`/u/${primaryCreator.slug}`}
+                          className="text-[11px] font-semibold text-orange-600 hover:underline"
+                        >
+                          Book a slot →
+                        </Link>
+                      )}
+                    </div>
+                    {primaryCreator && primaryCreator.sessionTypes.length > 0 ? (
+                      <div className="space-y-2">
+                        {primaryCreator.sessionTypes.map((st) => (
+                          <div
+                            key={st.id}
+                            className="flex items-center justify-between py-1.5 border-t text-xs"
+                            style={{ borderColor: "var(--border-base)" }}
+                          >
+                            <span className="font-600" style={{ color: "var(--text-primary)" }}>{st.title}</span>
+                            <span style={{ color: "var(--text-muted)" }}>{st.durationMinutes} min</span>
+                            <span className="font-700" style={{ color: "var(--green)" }}>
+                              ₹{(st.priceInPaise / 100).toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    ) : (
+                      <div className="py-3 text-center border-t" style={{ borderColor: "var(--border-base)" }}>
+                        <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                          No session types published yet. Set your price and duration in under 2 minutes.
+                        </p>
+                        <Link href="/signup" className="btn btn-primary text-xs mt-2 py-1 px-3 inline-flex">
+                          Create Session Type
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -335,23 +411,42 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Stats ───────────────────────────────────────────────────── */}
+      {/* ── Stats Strip (Real Platform Data) ────────────────────────── */}
       <section className="py-16 border-b" style={{ borderColor: "var(--border-base)" }}>
         <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-px border rounded-2xl overflow-hidden"
-            style={{ borderColor: "var(--border-base)", background: "var(--border-base)" }}>
+          <div
+            className="grid grid-cols-2 md:grid-cols-4 gap-px border rounded-2xl overflow-hidden"
+            style={{ borderColor: "var(--border-base)", background: "var(--border-base)" }}
+          >
             {[
-              { value: "₹1.2Cr+", label: "Paid out to creators", sub: "Across all sessions" },
-              { value: "2,400+", label: "Sessions completed", sub: "And counting" },
-              { value: "96%", label: "Creator payout rate", sub: "We take just 4%" },
+              {
+                value: publishedCreatorsCount.toString(),
+                label: publishedCreatorsCount === 1 ? "Active Creator" : "Active Creators",
+                sub: publishedCreatorsCount === 0 ? "Be the first to publish" : "Live & accepting bookings",
+              },
+              {
+                value: completedSessionsCount.toString(),
+                label: "Sessions Completed",
+                sub: completedSessionsCount === 0 ? "Ready for your first client" : "Verified client bookings",
+              },
+              {
+                value: "96%",
+                label: "Creator Take-Home",
+                sub: "Platform commission is strictly 4%",
+              },
+              {
+                value: "₹0",
+                label: "Monthly Platform Fee",
+                sub: "No lock-in, free forever",
+              },
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="p-8 md:p-10 text-center"
+                className="p-6 md:p-8 text-center"
                 style={{ background: "var(--bg-page)" }}
               >
                 <div
-                  className="text-4xl md:text-5xl font-900 tracking-tight mb-1"
+                  className="text-3xl md:text-5xl font-900 tracking-tight mb-1"
                   style={{ color: "var(--orange)" }}
                 >
                   {stat.value}
@@ -481,11 +576,11 @@ export default function LandingPage() {
             <div className="space-y-3 border-t pt-6" style={{ borderColor: "var(--border-base)" }}>
               {[
                 "Zero monthly fees — ever",
-                "Instant Razorpay settlements",
+                "Direct Razorpay settlements",
                 "Unlimited session types",
                 "Unlimited bookings",
                 "Custom booking page URL",
-                "Automated .ics invites",
+                "Automated .ics invites & calendar sync",
               ].map((item) => (
                 <div key={item} className="flex items-center gap-3 text-sm" style={{ color: "var(--text-secondary)" }}>
                   <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: "var(--green)" }} />
@@ -502,51 +597,161 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Testimonials ────────────────────────────────────────────── */}
+      {/* ── Real Creators Marketplace ──────────────────────────────── */}
       <section
+        id="creators"
         className="py-20 border-b"
         style={{ background: "var(--bg-subtle)", borderColor: "var(--border-base)" }}
       >
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
-            <div className="section-label justify-center">Creator stories</div>
+            <div className="section-label justify-center">Live on SessionBook</div>
             <h2 className="text-3xl font-900 tracking-tight mt-2">
-              Real people. Real earnings.
+              {publishedCreatorsCount > 0 ? "Featured Creators" : "Creator Directory"}
             </h2>
+            <p className="text-sm mt-2 max-w-xl mx-auto" style={{ color: "var(--text-muted)" }}>
+              {publishedCreatorsCount > 0
+                ? "Book 1:1 sessions directly with published experts on the platform."
+                : "Currently 0 creators are published. Be the first to launch your booking page."}
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {TESTIMONIALS.map((t, i) => (
-              <div
-                key={t.name}
-                className="card p-7 space-y-5 animate-fade-up"
-                style={{ animationDelay: `${i * 80}ms` }}
-              >
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="w-3.5 h-3.5 fill-current" style={{ color: "var(--orange)" }} />
-                  ))}
-                </div>
-                <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                  "{t.text}"
-                </p>
-                <div className="flex items-center gap-3 pt-2 border-t" style={{ borderColor: "var(--border-base)" }}>
+          {publishedCreatorsCount > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {publishedCreators.map((creator) => {
+                const initials = creator.user.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .slice(0, 2)
+                  .join("")
+                  .toUpperCase();
+
+                return (
                   <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-800 text-white flex-shrink-0"
-                    style={{ background: "var(--orange)" }}
+                    key={creator.id}
+                    className="card p-6 flex flex-col justify-between hover:shadow-md transition-shadow"
+                    style={{ background: "var(--bg-page)" }}
                   >
-                    {t.avatar}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        {creator.avatarUrl ? (
+                          <img
+                            src={creator.avatarUrl}
+                            alt={creator.user.name}
+                            className="w-12 h-12 rounded-full object-cover border"
+                            style={{ borderColor: "var(--border-base)" }}
+                          />
+                        ) : (
+                          <div
+                            className="w-12 h-12 rounded-full flex items-center justify-center font-800 text-sm text-white"
+                            style={{ background: "var(--orange)" }}
+                          >
+                            {initials}
+                          </div>
+                        )}
+                        <div>
+                          <h3 className="font-800 text-base" style={{ color: "var(--text-primary)" }}>
+                            {creator.user.name}
+                          </h3>
+                          <p className="text-xs font-mono" style={{ color: "var(--orange)" }}>
+                            /u/{creator.slug}
+                          </p>
+                        </div>
+                      </div>
+
+                      {creator.bio && (
+                        <p className="text-xs leading-relaxed line-clamp-3" style={{ color: "var(--text-muted)" }}>
+                          {creator.bio}
+                        </p>
+                      )}
+
+                      <div className="pt-3 border-t space-y-2" style={{ borderColor: "var(--border-base)" }}>
+                        <div className="text-[11px] font-700 uppercase tracking-wider text-gray-400">
+                          Available Sessions ({creator.sessionTypes.length})
+                        </div>
+                        {creator.sessionTypes.map((st) => (
+                          <div key={st.id} className="flex items-center justify-between text-xs">
+                            <span className="font-500 truncate max-w-[180px]" style={{ color: "var(--text-secondary)" }}>
+                              {st.title}
+                            </span>
+                            <span className="font-700" style={{ color: "var(--green)" }}>
+                              ₹{(st.priceInPaise / 100).toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-5 mt-4 border-t" style={{ borderColor: "var(--border-base)" }}>
+                      <Link
+                        href={`/u/${creator.slug}`}
+                        className="btn btn-outline w-full justify-center text-xs py-2.5 font-600"
+                      >
+                        Book a Session
+                        <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Card to invite new creators */}
+              <div
+                className="card p-6 flex flex-col justify-between border-dashed"
+                style={{ background: "var(--bg-page)", borderColor: "var(--orange)" }}
+              >
+                <div className="space-y-4">
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center text-orange-600"
+                    style={{ background: "var(--orange-light)" }}
+                  >
+                    <Zap className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-sm font-700" style={{ color: "var(--text-primary)" }}>{t.name}</p>
-                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                      {t.role} · {t.sessions} sessions
+                    <h3 className="font-800 text-base" style={{ color: "var(--text-primary)" }}>
+                      Join as a Creator
+                    </h3>
+                    <p className="text-xs text-orange-600 font-semibold mt-0.5">
+                      Get your /u/yourname link today
                     </p>
                   </div>
+                  <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                    Set your session fees, define your available hours, and get paid 96% directly via Razorpay.
+                  </p>
+                </div>
+                <div className="pt-5 mt-4 border-t" style={{ borderColor: "var(--border-base)" }}>
+                  <Link
+                    href="/signup"
+                    className="btn btn-primary w-full justify-center text-xs py-2.5 font-600"
+                  >
+                    Start for Free
+                    <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                  </Link>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <div className="card p-10 max-w-xl mx-auto text-center space-y-4" style={{ background: "var(--bg-page)" }}>
+              <div
+                className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center text-orange-600"
+                style={{ background: "var(--orange-light)" }}
+              >
+                <Users className="w-7 h-7" />
+              </div>
+              <h3 className="text-xl font-800" style={{ color: "var(--text-primary)" }}>
+                0 Creators Published Yet
+              </h3>
+              <p className="text-sm max-w-md mx-auto" style={{ color: "var(--text-muted)" }}>
+                Be the founding creator on SessionBook. Create your account in 30 seconds, list your 1:1 sessions, and share your personal link.
+              </p>
+              <div className="pt-2">
+                <Link href="/signup" className="btn btn-primary text-sm px-6 py-3">
+                  Claim Your Handle Now
+                  <ArrowRight className="w-4 h-4 ml-1.5" />
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -559,7 +764,7 @@ export default function LandingPage() {
             <span style={{ color: "var(--orange)" }}>Start charging for it.</span>
           </h2>
           <p className="text-base mb-8" style={{ color: "var(--text-muted)" }}>
-            Join thousands of creators earning from their 1:1 time. Free forever to start.
+            The transparent 1:1 session booking platform with a flat 4% commission. Free forever to start.
           </p>
           <Link href="/signup" className="btn btn-primary text-base px-8 py-4 mx-auto">
             Create your booking page

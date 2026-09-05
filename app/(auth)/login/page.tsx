@@ -91,26 +91,26 @@ function LoginForm() {
             ))}
           </div>
 
-          {/* Stat strip */}
+          {/* Stat strip - Genuine Platform Economics */}
           <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex items-center justify-between shadow-xs">
-            <div className="text-center flex-1">
-              <p className="text-xl font-extrabold text-gray-950">2,400+</p>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                Sessions
-              </p>
-            </div>
-            <div className="w-px h-8 bg-gray-200" />
-            <div className="text-center flex-1">
-              <p className="text-xl font-extrabold text-gray-950">₹1.2Cr+</p>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                Paid Out
-              </p>
-            </div>
-            <div className="w-px h-8 bg-gray-200" />
             <div className="text-center flex-1">
               <p className="text-xl font-extrabold text-gray-950">96%</p>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                Creator Cut
+                Creator Share
+              </p>
+            </div>
+            <div className="w-px h-8 bg-gray-200" />
+            <div className="text-center flex-1">
+              <p className="text-xl font-extrabold text-gray-950">4%</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                Platform Fee
+              </p>
+            </div>
+            <div className="w-px h-8 bg-gray-200" />
+            <div className="text-center flex-1">
+              <p className="text-xl font-extrabold text-gray-950">₹0</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                Monthly Fee
               </p>
             </div>
           </div>
