@@ -201,3 +201,154 @@ export async function sendBookingConfirmationEmail(data: BookingEmailData) {
     console.error("Failed to send creator email via Resend:", err);
   }
 }
+
+export interface BookingCancellationEmailData {
+  bookingId: string;
+  sessionTitle: string;
+  scheduledStart: Date | string;
+  clientName: string;
+  clientEmail: string;
+  creatorName: string;
+  creatorEmail: string;
+  reason?: string;
+  refundType: "FULL" | "PARTIAL" | "NONE";
+  refundAmountPaise: number;
+}
+
+export async function sendBookingCancellationEmail(data: BookingCancellationEmailData) {
+  const start = new Date(data.scheduledStart);
+  const formattedDate = format(start, "EEEE, MMMM d, yyyy");
+  const formattedTime = format(start, "h:mm a");
+  const refundRupees = (data.refundAmountPaise / 100).toLocaleString("en-IN");
+  const isRefunded = data.refundAmountPaise > 0;
+  const refundTitle = data.refundType === "FULL" ? "Full Refund (100%)" : "Partial Refund (96%)";
+
+  if (!resend) {
+    console.log("-----------------------------------------");
+    console.log(`[CANCELLATION EMAIL SIMULATION (Resend not configured)]`);
+    console.log(`To Client: ${data.clientEmail}`);
+    console.log(`Subject: Cancelled: 1:1 Session with ${data.creatorName}`);
+    console.log(`Reason: ${data.reason || "Cancelled by creator"}`);
+    console.log(`Refund: ${isRefunded ? `₹${refundRupees} (${refundTitle})` : "None"}`);
+    console.log(`To Creator: ${data.creatorEmail}`);
+    console.log("-----------------------------------------");
+    return;
+  }
+
+  // 1. Email to Client
+  try {
+    const clientRes = await resend.emails.send({
+      from: fromEmail,
+      to: data.clientEmail,
+      subject: `Session Cancelled: 1:1 with ${data.creatorName}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
+          <h2 style="color: #dc2626;">Your 1:1 session has been cancelled</h2>
+          <p>Hi ${data.clientName},</p>
+          <p>Your upcoming session with <strong>${data.creatorName}</strong> has been cancelled by the creator.</p>
+          
+          <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; margin: 20px 0;">
+            <p style="margin: 4px 0;"><strong>Session:</strong> ${data.sessionTitle}</p>
+            <p style="margin: 4px 0;"><strong>Scheduled Date:</strong> ${formattedDate} at ${formattedTime}</p>
+            <p style="margin: 4px 0;"><strong>Reason:</strong> ${data.reason || "Cancelled by creator"}</p>
+          </div>
+
+          ${
+            isRefunded
+              ? `
+            <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px; margin: 20px 0;">
+              <h3 style="margin-top: 0; color: #166534; font-size: 15px;">💰 Refund Initiated</h3>
+              <p style="margin: 4px 0;"><strong>Refund Type:</strong> ${refundTitle}</p>
+              <p style="margin: 4px 0;"><strong>Amount to be Refunded:</strong> ₹${refundRupees}</p>
+              <p style="margin: 8px 0 0 0; font-size: 12px; color: #15803d;">
+                Your refund has been initiated via Razorpay and will be credited to your original payment method in <strong>5–7 business days</strong>.
+              </p>
+            </div>
+          `
+              : `
+            <p style="color: #64748b; font-size: 13px;">No payment was captured for this session.</p>
+          `
+          }
+
+          <p style="color: #64748b; font-size: 13px; margin-top: 30px;">
+            If you have any questions, feel free to contact the creator directly at <a href="mailto:${data.creatorEmail}" style="color: #ea580c;">${data.creatorEmail}</a>.
+          </p>
+          <p style="color: #94a3b8; font-size: 12px;">Best regards,<br/>SessionBook Team</p>
+        </div>
+      `,
+    });
+
+    if (clientRes.error && clientRes.error.message.includes("only send testing emails")) {
+      console.warn(`Resend Test limitation: Delivering client cancellation copy to creator (${data.creatorEmail})`);
+      await resend.emails.send({
+        from: fromEmail,
+        to: data.creatorEmail,
+        subject: `[Client Copy] Session Cancelled: 1:1 with ${data.creatorName}`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
+            <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px; color: #92400e;">
+              <strong>Resend Test Mode Note:</strong> This is a copy of the cancellation notice intended for <strong>${data.clientEmail}</strong> (in Resend sandbox, emails are routed to your verified developer email).
+            </div>
+            <h2 style="color: #dc2626;">Session Cancelled</h2>
+            <p>Hi ${data.clientName},</p>
+            <p>Your session with <strong>${data.creatorName}</strong> has been cancelled.</p>
+            <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; margin: 20px 0;">
+              <p style="margin: 4px 0;"><strong>Session:</strong> ${data.sessionTitle}</p>
+              <p style="margin: 4px 0;"><strong>Date:</strong> ${formattedDate} at ${formattedTime}</p>
+              <p style="margin: 4px 0;"><strong>Reason:</strong> ${data.reason || "Cancelled by creator"}</p>
+            </div>
+            ${
+              isRefunded
+                ? `
+              <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px; margin: 20px 0;">
+                <p style="margin: 4px 0;"><strong>Refund Type:</strong> ${refundTitle}</p>
+                <p style="margin: 4px 0;"><strong>Refund Amount:</strong> ₹${refundRupees}</p>
+                <p style="margin: 8px 0 0 0; font-size: 12px; color: #15803d;">
+                  Processed via Razorpay (5–7 business days).
+                </p>
+              </div>
+            `
+                : ""
+            }
+          </div>
+        `,
+      });
+    }
+  } catch (err) {
+    console.error("Failed to send client cancellation email via Resend:", err);
+  }
+
+  // 2. Email Confirmation to Creator
+  try {
+    await resend.emails.send({
+      from: fromEmail,
+      to: data.creatorEmail,
+      subject: `Cancelled: 1:1 Session with ${data.clientName}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
+          <h2 style="color: #ea580c;">Session Cancellation Confirmed</h2>
+          <p>Hi ${data.creatorName},</p>
+          <p>You have successfully cancelled your session with <strong>${data.clientName}</strong>.</p>
+          
+          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 20px 0;">
+            <p style="margin: 4px 0;"><strong>Session:</strong> ${data.sessionTitle}</p>
+            <p style="margin: 4px 0;"><strong>Scheduled:</strong> ${formattedDate} at ${formattedTime}</p>
+            <p style="margin: 4px 0;"><strong>Client:</strong> ${data.clientName} (${data.clientEmail})</p>
+            <p style="margin: 4px 0;"><strong>Reason:</strong> ${data.reason || "Cancelled by creator"}</p>
+            ${
+              isRefunded
+                ? `
+              <p style="margin: 4px 0;"><strong>Refund Processed:</strong> ₹${refundRupees} (${refundTitle})</p>
+            `
+                : ""
+            }
+          </div>
+
+          <p style="color: #64748b; font-size: 13px; margin-top: 30px;">Best regards,<br/>SessionBook Team</p>
+        </div>
+      `,
+    });
+  } catch (err) {
+    console.error("Failed to send creator cancellation confirmation via Resend:", err);
+  }
+}
