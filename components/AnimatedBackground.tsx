@@ -6,82 +6,21 @@ export default function AnimatedBackground() {
       aria-hidden="true"
       className="fixed inset-0 z-0 overflow-hidden pointer-events-none"
     >
-      {/* Noise grain overlay — fixed pseudo-element equivalent */}
+      {/* Subtle warm ambient glow from top */}
       <div
-        className="absolute inset-0 opacity-[0.025]"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[450px] opacity-40 pointer-events-none"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
-          backgroundSize: "200px 200px",
-        }}
-      />
-
-      {/* Orb 1 — Indigo, top-left area */}
-      <div
-        className="orb-1 absolute"
-        style={{
-          top: "-10%",
-          left: "-5%",
-          width: "600px",
-          height: "600px",
-          borderRadius: "50%",
           background:
-            "radial-gradient(circle, rgba(99,102,241,0.18) 0%, rgba(99,102,241,0.06) 50%, transparent 70%)",
-          filter: "blur(40px)",
+            "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(249, 115, 22, 0.08) 0%, rgba(254, 215, 170, 0.04) 50%, transparent 80%)",
         }}
       />
 
-      {/* Orb 2 — Teal, top-right */}
+      {/* Modern dot grid texture */}
       <div
-        className="orb-2 absolute"
+        className="absolute inset-0 opacity-[0.04]"
         style={{
-          top: "5%",
-          right: "-8%",
-          width: "500px",
-          height: "500px",
-          borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(15,118,110,0.15) 0%, rgba(15,118,110,0.05) 50%, transparent 70%)",
-          filter: "blur(50px)",
-        }}
-      />
-
-      {/* Orb 3 — Emerald, center-bottom */}
-      <div
-        className="orb-3 absolute"
-        style={{
-          bottom: "15%",
-          left: "40%",
-          width: "450px",
-          height: "450px",
-          borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(16,185,129,0.10) 0%, rgba(16,185,129,0.03) 50%, transparent 70%)",
-          filter: "blur(60px)",
-        }}
-      />
-
-      {/* Orb 4 — deep indigo, far bottom-right */}
-      <div
-        className="orb-1 absolute"
-        style={{
-          bottom: "-5%",
-          right: "10%",
-          width: "400px",
-          height: "400px",
-          borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(79,70,229,0.12) 0%, transparent 70%)",
-          filter: "blur(50px)",
-          animationDelay: "4s",
-        }}
-      />
-
-      {/* Grid overlay — subtle dot grid */}
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage: `radial-gradient(rgba(255,255,255,0.8) 1px, transparent 1px)`,
-          backgroundSize: "48px 48px",
+          backgroundImage: `radial-gradient(#111827 1px, transparent 1px)`,
+          backgroundSize: "24px 24px",
         }}
       />
     </div>
