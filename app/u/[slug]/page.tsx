@@ -4,13 +4,10 @@ import prisma from "@/lib/prisma";
 import {
   Clock,
   Sparkles,
-  CheckCircle2,
   ArrowRight,
   ShieldCheck,
   Video,
   Globe,
-  Star,
-  Users,
   CalendarCheck2,
 } from "lucide-react";
 import AnimatedBackground from "@/components/AnimatedBackground";
@@ -45,35 +42,21 @@ export default async function PublicCreatorPage({ params }: PublicProfileProps) 
     .toUpperCase();
 
   return (
-    <div
-      className="min-h-[100dvh] flex flex-col"
-      style={{ background: "var(--bg-base)", color: "var(--text-primary)" }}
-    >
+    <div className="min-h-[100dvh] flex flex-col bg-[#FAFAFA] text-gray-900 relative">
       <AnimatedBackground />
 
       {/* ── Navbar ── */}
-      <header
-        className="relative z-30 border-b sticky top-0"
-        style={{
-          borderColor: "var(--glass-border)",
-          background: "rgba(5,8,17,0.8)",
-          backdropFilter: "blur(20px)",
-        }}
-      >
+      <header className="relative z-30 border-b border-gray-200/80 bg-white/80 backdrop-blur-md sticky top-0">
         <div className="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #6366f1 0%, #0f766e 100%)" }}
-            >
-              <Sparkles className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center text-white shadow-xs">
+              <Sparkles className="w-4 h-4" />
             </div>
-            <span className="font-800 text-white text-base tracking-tight">SessionBook</span>
+            <span className="font-extrabold text-gray-950 text-base tracking-tight">SessionBook</span>
           </Link>
           <Link
             href="/login"
-            className="text-xs font-600 transition-colors"
-            style={{ color: "var(--text-muted)" }}
+            className="text-xs font-semibold text-gray-600 hover:text-gray-900 transition-colors"
           >
             Creator Login →
           </Link>
@@ -81,23 +64,11 @@ export default async function PublicCreatorPage({ params }: PublicProfileProps) 
       </header>
 
       <main className="relative z-10 flex-1 max-w-5xl w-full mx-auto px-4 py-12 md:py-20">
-
         {/* ── Creator Hero ── */}
-        <div className="flex flex-col items-center text-center mb-16 gap-5">
-          {/* Avatar with gradient ring */}
+        <div className="flex flex-col items-center text-center mb-16 gap-4">
+          {/* Avatar */}
           <div className="relative inline-block">
-            <div
-              className="absolute inset-0 rounded-3xl opacity-60"
-              style={{
-                background: "linear-gradient(135deg, rgba(99,102,241,0.5), rgba(15,118,110,0.4))",
-                filter: "blur(12px)",
-                transform: "scale(1.1)",
-              }}
-            />
-            <div
-              className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-3xl border-2 overflow-hidden flex items-center justify-center"
-              style={{ borderColor: "rgba(99,102,241,0.4)" }}
-            >
+            <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex items-center justify-center bg-white">
               {profile.avatarUrl ? (
                 <img
                   src={profile.avatarUrl}
@@ -105,65 +76,48 @@ export default async function PublicCreatorPage({ params }: PublicProfileProps) 
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div
-                  className="w-full h-full flex items-center justify-center text-3xl font-800 text-white"
-                  style={{ background: "linear-gradient(135deg, #6366f1 0%, #0f766e 100%)" }}
-                >
+                <div className="w-full h-full flex items-center justify-center text-3xl font-extrabold text-orange-700 bg-orange-100">
                   {initials}
                 </div>
               )}
             </div>
             {/* Verified badge */}
             <div
-              className="absolute -bottom-2 -right-2 w-8 h-8 rounded-xl flex items-center justify-center border-2"
-              style={{
-                background: "linear-gradient(135deg, #6366f1, #4f46e5)",
-                borderColor: "var(--bg-base)",
-              }}
+              className="absolute -bottom-2 -right-2 w-7 h-7 rounded-lg flex items-center justify-center border-2 border-white bg-emerald-600 text-white shadow-xs"
+              title="Verified Creator"
             >
-              <ShieldCheck className="w-4 h-4 text-white" />
+              <ShieldCheck className="w-4 h-4" />
             </div>
           </div>
 
           {/* Name & timezone */}
           <div>
-            <h1 className="text-2xl sm:text-3xl font-800 text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-950 tracking-tight">
               {user.name}
             </h1>
-            <div
-              className="flex items-center justify-center gap-1.5 mt-1.5 text-xs font-500"
-              style={{ color: "var(--text-muted)" }}
-            >
-              <Globe className="w-3.5 h-3.5" style={{ color: "#6366f1" }} />
+            <div className="flex items-center justify-center gap-1.5 mt-1 text-xs text-gray-500 font-medium">
+              <Globe className="w-3.5 h-3.5 text-orange-600" />
               <span>{user.timezone}</span>
             </div>
           </div>
 
           {/* Bio */}
           {profile.bio && (
-            <p
-              className="text-sm sm:text-base leading-relaxed max-w-lg"
-              style={{ color: "var(--text-secondary)" }}
-            >
+            <p className="text-sm sm:text-base text-gray-600 leading-relaxed max-w-lg">
               {profile.bio}
             </p>
           )}
 
           {/* Trust strip */}
-          <div className="flex flex-wrap items-center justify-center gap-4 mt-2">
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
             {[
-              { icon: ShieldCheck, label: "Verified Creator", color: "#10b981" },
-              { icon: Video, label: "Online Sessions", color: "#6366f1" },
-              { icon: CalendarCheck2, label: "Instant Booking", color: "#f59e0b" },
+              { icon: ShieldCheck, label: "Verified Creator", color: "text-emerald-700 bg-emerald-50 border-emerald-200" },
+              { icon: Video, label: "1:1 Video Calls", color: "text-orange-700 bg-orange-50 border-orange-200" },
+              { icon: CalendarCheck2, label: "Instant Confirmation", color: "text-blue-700 bg-blue-50 border-blue-200" },
             ].map(({ icon: Icon, label, color }) => (
               <div
                 key={label}
-                className="flex items-center gap-1.5 text-xs font-600 px-3 py-1.5 rounded-full"
-                style={{
-                  background: `${color}12`,
-                  border: `1px solid ${color}25`,
-                  color: color,
-                }}
+                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border ${color}`}
               >
                 <Icon className="w-3.5 h-3.5" />
                 <span>{label}</span>
@@ -175,55 +129,41 @@ export default async function PublicCreatorPage({ params }: PublicProfileProps) 
         {/* ── Session Types ── */}
         <div className="space-y-6">
           <div className="text-center">
-            <p className="badge mx-auto w-fit mb-3">Available Sessions</p>
-            <h2 className="text-xl sm:text-2xl font-800 text-white tracking-tight">
-              Book a 1:1 Session
+            <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200 inline-block mb-2">
+              Bookings
+            </span>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-gray-950 tracking-tight">
+              Available Sessions
             </h2>
-            <p className="text-sm mt-1.5" style={{ color: "var(--text-muted)" }}>
-              Select a session type and choose your preferred time slot.
+            <p className="text-sm text-gray-500 mt-1">
+              Select a session type to view open calendar dates and reserve your slot.
             </p>
           </div>
 
           {sessionTypes.length === 0 ? (
-            <div className="glass-card p-10 text-center max-w-md mx-auto">
-              <CalendarCheck2 className="w-10 h-10 mx-auto mb-3" style={{ color: "var(--text-muted)" }} />
-              <p className="font-700 text-white">No sessions available yet</p>
-              <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
-                Please check back soon.
+            <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center max-w-md mx-auto shadow-xs">
+              <CalendarCheck2 className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+              <p className="font-bold text-gray-900">No sessions available right now</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Please check back soon or reach out directly to the creator.
               </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {sessionTypes.map((st, i) => (
+              {sessionTypes.map((st) => (
                 <div
                   key={st.id}
-                  className="glass-card p-6 flex flex-col justify-between group animate-fade-up relative overflow-hidden"
-                  style={{ animationDelay: `${i * 80}ms` }}
+                  className="bg-white border border-gray-200/90 rounded-2xl p-6 flex flex-col justify-between group hover:border-gray-300 hover:shadow-md transition-all duration-200 shadow-xs"
                 >
-                  {/* Hover glow */}
-                  <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                    style={{
-                      background: "radial-gradient(ellipse at 0% 0%, rgba(99,102,241,0.08) 0%, transparent 60%)",
-                    }}
-                  />
-
-                  <div className="relative z-10 space-y-4">
+                  <div className="space-y-4">
                     {/* Duration + price */}
                     <div className="flex items-start justify-between">
-                      <div
-                        className="flex items-center gap-1.5 text-xs font-600 px-2.5 py-1 rounded-full"
-                        style={{
-                          background: "rgba(99,102,241,0.1)",
-                          border: "1px solid rgba(99,102,241,0.2)",
-                          color: "#a5b4fc",
-                        }}
-                      >
+                      <div className="flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
                         <Clock className="w-3.5 h-3.5" />
                         <span>{st.durationMinutes} min</span>
                       </div>
                       <div className="text-right">
-                        <span className="text-xl font-800 text-white">
+                        <span className="text-xl font-extrabold text-gray-950">
                           ₹{(st.priceInPaise / 100).toLocaleString("en-IN")}
                         </span>
                       </div>
@@ -231,34 +171,28 @@ export default async function PublicCreatorPage({ params }: PublicProfileProps) 
 
                     {/* Title + desc */}
                     <div>
-                      <h3 className="text-base font-700 text-white group-hover:text-indigo-300 transition-colors leading-tight">
+                      <h3 className="text-base font-bold text-gray-950 group-hover:text-orange-600 transition-colors leading-snug">
                         {st.title}
                       </h3>
                       {st.description && (
-                        <p
-                          className="text-xs mt-2 leading-relaxed line-clamp-3"
-                          style={{ color: "var(--text-muted)" }}
-                        >
+                        <p className="text-xs text-gray-500 mt-2 leading-relaxed line-clamp-3">
                           {st.description}
                         </p>
                       )}
                     </div>
 
                     {/* Format */}
-                    <div
-                      className="flex items-center gap-2 text-xs pt-3 border-t"
-                      style={{ borderColor: "var(--glass-border)", color: "var(--text-muted)" }}
-                    >
-                      <Video className="w-3.5 h-3.5" />
-                      <span>Online Video · Calendar .ics invite</span>
+                    <div className="flex items-center gap-2 text-xs pt-3 border-t border-gray-100 text-gray-500">
+                      <Video className="w-3.5 h-3.5 text-orange-600" />
+                      <span>Online Video Call · Calendar invite sent</span>
                     </div>
                   </div>
 
                   {/* CTA */}
-                  <div className="relative z-10 pt-5 mt-4">
+                  <div className="pt-5 mt-4">
                     <Link
                       href={`/u/${profile.slug}/book/${st.id}`}
-                      className="btn-primary btn-emerald w-full justify-center text-sm py-3"
+                      className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-orange-600 hover:bg-orange-700 transition-colors shadow-xs shadow-orange-500/20"
                     >
                       <span>Choose a Slot</span>
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -272,20 +206,10 @@ export default async function PublicCreatorPage({ params }: PublicProfileProps) 
       </main>
 
       {/* ── Footer ── */}
-      <footer
-        className="relative z-10 border-t py-6 text-center text-xs"
-        style={{
-          borderColor: "var(--glass-border)",
-          color: "var(--text-muted)",
-          background: "rgba(5,8,17,0.5)",
-        }}
-      >
+      <footer className="relative z-10 border-t border-gray-200 bg-white py-6 text-center text-xs text-gray-500">
         <div className="flex items-center justify-center gap-2">
-          <div
-            className="w-5 h-5 rounded-md flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #6366f1, #0f766e)" }}
-          >
-            <Sparkles className="w-3 h-3 text-white" />
+          <div className="w-5 h-5 rounded-md bg-orange-500 flex items-center justify-center text-white">
+            <Sparkles className="w-3 h-3" />
           </div>
           <span>Powered by SessionBook · Secure payments via Razorpay</span>
         </div>
