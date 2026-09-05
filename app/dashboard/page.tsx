@@ -15,6 +15,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { format } from "date-fns";
+import CancelSessionButton from "@/components/CancelSessionButton";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -215,6 +216,15 @@ export default async function DashboardPage() {
                       "{booking.notes}"
                     </p>
                   )}
+
+                  <div className="pt-2 border-t border-slate-800/60 flex items-center justify-end">
+                    <CancelSessionButton
+                      bookingId={booking.id}
+                      clientName={booking.clientName}
+                      sessionTitle={booking.sessionType.title}
+                      variant="button"
+                    />
+                  </div>
                 </div>
               );
             })}

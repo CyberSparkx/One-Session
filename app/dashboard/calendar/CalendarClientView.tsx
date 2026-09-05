@@ -30,6 +30,7 @@ import {
   AlertCircle,
   Sparkles,
 } from "lucide-react";
+import CancelSessionButton from "@/components/CancelSessionButton";
 
 interface BookingItem {
   id: string;
@@ -59,6 +60,7 @@ export default function CalendarClientView({
   creatorTimezone,
   creatorName,
 }: CalendarClientViewProps) {
+  const [bookingList, setBookingList] = useState<BookingItem[]>(bookings);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
@@ -71,14 +73,14 @@ export default function CalendarClientView({
   const paddingDays = (startDay + 6) % 7; // Monday-first grid
 
   // Filter bookings for the selected date
-  const selectedDayBookings = bookings.filter((b) => {
+  const selectedDayBookings = bookingList.filter((b) => {
     const start = parseISO(b.scheduledStart);
     return isSameDay(start, selectedDate);
   });
 
   // Count bookings for a specific day
   const getBookingsForDay = (day: Date) => {
-    return bookings.filter((b) => isSameDay(parseISO(b.scheduledStart), day));
+    return bookingList.filter((b) => isSameDay(parseISO(b.scheduledStart), day));
   };
 
   // Helper to build a direct Google Calendar Web Link (action=TEMPLATE)
@@ -327,7 +329,7 @@ export default function CalendarClientView({
                           Payout: ₹{(b.creatorPayoutPaise / 100).toLocaleString("en-IN")}
                         </span>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           {/* Add to Google Calendar Web Link */}
                           <a
                             href={buildGoogleCalendarWebUrl(b)}
@@ -349,6 +351,19 @@ export default function CalendarClientView({
                             <Download className="w-3.5 h-3.5" />
                             <span>.ics</span>
                           </a>
+
+                          {/* Cancel Session Action */}
+                          {isConfirmed && (
+                            <CancelSessionButton
+                              bookingId={b.id}
+                              clientName={b.clientName}
+                              sessionTitle={b.sessionTitle}
+                              variant="icon"
+                              onSuccess={() => {
+                                setBookingList((prev) => prev.filter((item) => item.id !== b.id));
+                              }}
+                            />
+                          )}
                         </div>
                       </div>
                     </div>
