@@ -9,6 +9,9 @@ import {
   AlertCircle,
   X,
   Sparkles,
+  Info,
+  HelpCircle,
+  ShieldCheck,
 } from "lucide-react";
 
 interface SessionType {
@@ -22,6 +25,27 @@ interface SessionType {
   isActive: boolean;
 }
 
+// Exact fee calculation matching the billing engine:
+// Platform Fee: 4%
+// Gateway Fee: 2%
+// GST on Gateway Fee: 18% of 2% = 0.36%
+// Total deduction: 6.36%
+// Creator Net Payout: 93.64%
+function calculateNetBreakdown(priceInPaise: number) {
+  const platformFee = Math.round(priceInPaise * 0.04);
+  const gatewayFee = Math.round(priceInPaise * 0.02);
+  const gatewayGst = Math.round(gatewayFee * 0.18);
+  const totalDeductions = platformFee + gatewayFee + gatewayGst;
+  const netPayout = Math.max(0, priceInPaise - totalDeductions);
+  return {
+    platformFee,
+    gatewayFee,
+    gatewayGst,
+    totalDeductions,
+    netPayout,
+  };
+}
+
 export default function SessionTypesPage() {
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +53,7 @@ export default function SessionTypesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [showFeeModal, setShowFeeModal] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
@@ -175,13 +200,50 @@ export default function SessionTypesPage() {
             Define the consultations, mentorship calls, or services clients can book with you.
           </p>
         </div>
-        <button
-          onClick={openCreateModal}
-          className="py-2.5 px-4 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold flex items-center gap-2 shadow-xs shadow-orange-500/20 transition-all cursor-pointer self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Session Type</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="relative group">
+            <button
+              type="button"
+              onClick={() => setShowFeeModal(true)}
+              className="py-2 px-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+            >
+              <Info className="w-3.5 h-3.5 text-orange-600" />
+              <span>Payment Structure</span>
+            </button>
+            {/* Quick hover preview tooltip */}
+            <div className="absolute right-0 top-full mt-2 w-72 p-3 bg-gray-950 text-white rounded-xl shadow-xl text-xs z-30 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200">
+              <div className="font-bold text-[11px] uppercase tracking-wider text-orange-400 mb-1.5 flex items-center justify-between">
+                <span>Fee Division (Total 6.36%)</span>
+                <span>Net: 93.64%</span>
+              </div>
+              <ul className="space-y-1 text-gray-300 text-[11px]">
+                <li className="flex justify-between">
+                  <span>Platform Fee:</span>
+                  <span className="font-semibold text-white">4.0%</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>Razorpay Gateway:</span>
+                  <span className="font-semibold text-white">2.0%</span>
+                </li>
+                <li className="flex justify-between">
+                  <span>GST on Gateway (18%):</span>
+                  <span className="font-semibold text-white">0.36%</span>
+                </li>
+              </ul>
+              <div className="mt-2 pt-2 border-t border-gray-800 text-[10px] text-gray-400">
+                Click to view complete payout calculation breakdown.
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={openCreateModal}
+            className="py-2.5 px-4 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold flex items-center gap-2 shadow-xs shadow-orange-500/20 transition-all cursor-pointer self-start sm:self-auto"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Session Type</span>
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -249,12 +311,33 @@ export default function SessionTypesPage() {
                       {st.bufferAfterMin}m post
                     </span>
                   </div>
-                  <div className="flex items-center justify-between pt-1.5 border-t border-gray-100">
-                    <span className="text-gray-400">Your Net (96%)</span>
-                    <span className="font-bold text-emerald-600">
-                      ₹{Math.round((st.priceInPaise * 0.96) / 100).toLocaleString("en-IN")}
-                    </span>
-                  </div>
+                  {(() => {
+                    const breakdown = calculateNetBreakdown(st.priceInPaise);
+                    return (
+                      <div className="pt-2 border-t border-gray-100 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-500 font-medium flex items-center gap-1">
+                            Your Net (93.64%)
+                            <button
+                              type="button"
+                              onClick={() => setShowFeeModal(true)}
+                              className="text-gray-400 hover:text-orange-600 transition-colors"
+                              title="View fee breakdown"
+                            >
+                              <HelpCircle className="w-3 h-3 inline" />
+                            </button>
+                          </span>
+                          <span className="font-bold text-emerald-600">
+                            ₹{(breakdown.netPayout / 100).toLocaleString("en-IN")}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[11px] text-gray-400">
+                          <span>Fees (4% + 2% + GST):</span>
+                          <span>-₹{(breakdown.totalDeductions / 100).toLocaleString("en-IN")}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -362,6 +445,29 @@ export default function SessionTypesPage() {
                 </div>
               </div>
 
+              {/* Dynamic Payout Preview inside the Form */}
+              {(() => {
+                const previewPaise = Math.max(0, Math.round(Number(form.priceInRupees || 0) * 100));
+                const b = calculateNetBreakdown(previewPaise);
+                return (
+                  <div className="p-3.5 rounded-xl bg-orange-50/70 border border-orange-200/80 text-xs space-y-1.5">
+                    <div className="flex items-center justify-between font-bold text-gray-900">
+                      <span className="flex items-center gap-1.5 text-gray-700">
+                        <Sparkles className="w-3.5 h-3.5 text-orange-600" />
+                        Estimated Creator Net (93.64%):
+                      </span>
+                      <span className="text-emerald-700 text-sm font-extrabold">
+                        ₹{(b.netPayout / 100).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-gray-500 pt-1 border-t border-orange-200/60">
+                      <span>Platform Fee (4%): ₹{(b.platformFee / 100).toFixed(2)}</span>
+                      <span>Gateway + GST (2.36%): ₹{((b.gatewayFee + b.gatewayGst) / 100).toFixed(2)}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
@@ -419,6 +525,113 @@ export default function SessionTypesPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Structure Information Modal */}
+      {showFeeModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-lg bg-white border border-gray-200 rounded-2xl p-6 shadow-2xl space-y-6">
+            <div className="flex items-start justify-between border-b border-gray-100 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-orange-50 border border-orange-200 text-orange-600">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-950">Payment Division Structure</h2>
+                  <p className="text-xs text-gray-500">Transparent breakdown of every transaction</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowFeeModal(false)}
+                className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl bg-emerald-50/80 border border-emerald-200 flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 block">
+                    Your Payout Share
+                  </span>
+                  <span className="text-xl font-extrabold text-emerald-950">93.64%</span>
+                  <p className="text-[11px] text-emerald-700/80 mt-0.5">
+                    Directly disbursed to your registered bank account or UPI
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block">
+                    Total Deductions
+                  </span>
+                  <span className="text-xl font-extrabold text-gray-700">6.36%</span>
+                </div>
+              </div>
+
+              <div className="border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100 text-xs">
+                <div className="p-3.5 flex items-center justify-between bg-gray-50/50">
+                  <div>
+                    <span className="font-bold text-gray-900 block">Platform Commission</span>
+                    <span className="text-gray-500 text-[11px]">Covers hosting, calendar sync & notifications</span>
+                  </div>
+                  <span className="font-extrabold text-gray-900 text-sm">4.00%</span>
+                </div>
+
+                <div className="p-3.5 flex items-center justify-between bg-white">
+                  <div>
+                    <span className="font-bold text-gray-900 block">Razorpay Payment Gateway</span>
+                    <span className="text-gray-500 text-[11px]">Processing fee for UPI, Cards & NetBanking</span>
+                  </div>
+                  <span className="font-extrabold text-gray-900 text-sm">2.00%</span>
+                </div>
+
+                <div className="p-3.5 flex items-center justify-between bg-white">
+                  <div>
+                    <span className="font-bold text-gray-900 block">GST on Payment Gateway</span>
+                    <span className="text-gray-500 text-[11px]">Standard 18% statutory GST on the 2% gateway fee</span>
+                  </div>
+                  <span className="font-extrabold text-gray-900 text-sm">0.36%</span>
+                </div>
+              </div>
+
+              {/* Example Calculation Table */}
+              <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2">
+                <div className="text-xs font-bold text-gray-900 flex items-center justify-between">
+                  <span>Example with a ₹1,000 Session:</span>
+                  <span className="text-gray-500 font-normal">₹1,000.00</span>
+                </div>
+                <div className="space-y-1 text-xs text-gray-600">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">• Platform Fee (4%)</span>
+                    <span>- ₹40.00</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">• Razorpay Gateway Fee (2%)</span>
+                    <span>- ₹20.00</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">• GST on Gateway (18% of ₹20)</span>
+                    <span>- ₹3.60</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t border-gray-200 font-bold text-gray-950">
+                    <span className="text-emerald-700">Creator Net Payout</span>
+                    <span className="text-emerald-600 font-extrabold">₹936.40</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setShowFeeModal(false)}
+                className="w-full py-2.5 px-4 rounded-xl bg-gray-900 hover:bg-gray-800 text-white text-xs font-semibold transition-colors"
+              >
+                Understood
+              </button>
+            </div>
           </div>
         </div>
       )}
