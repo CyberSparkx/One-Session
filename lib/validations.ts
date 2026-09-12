@@ -28,31 +28,127 @@ export const ALLOWED_EMAIL_ERROR =
   "Only Google (Gmail) or Yahoo email addresses are allowed (e.g., @gmail.com, @yahoo.com)";
 
 /**
- * Validates an Indian mobile phone number:
- * - Exactly 10 digits
- * - Starts with 6, 7, 8, or 9 (standard Indian mobile operator ranges: Jio, Airtel, Vi, BSNL)
- * - May optionally be prefixed with +91, 91, or 0, but clean digits must be 10 digits starting with 6-9
+ * Country codes, dialing prefixes, and digit rules.
+ * India strictly requires 10 digits starting with 6, 7, 8, or 9.
  */
-export const INDIAN_PHONE_REGEX = /^[6-9]\d{9}$/;
-
-export function sanitizeIndianPhoneNumber(phone: string): string {
-  if (!phone || typeof phone !== "string") return "";
-  // Strip all whitespace, dashes, parens, and plus signs
-  const cleaned = phone.replace(/[\s\-\(\)\+]/g, "");
-  // If starts with 91 and has 12 digits, strip 91
-  if (cleaned.startsWith("91") && cleaned.length === 12) {
-    return cleaned.slice(2);
-  }
-  // If starts with 0 and has 11 digits, strip 0
-  if (cleaned.startsWith("0") && cleaned.length === 11) {
-    return cleaned.slice(1);
-  }
-  return cleaned;
+export interface CountryConfig {
+  code: string;
+  name: string;
+  dialCode: string;
+  flag: string;
+  maxLength: number;
+  minLength: number;
+  placeholder: string;
+  regex: RegExp;
+  error: string;
 }
 
-export function isValidIndianPhoneNumber(phone: string): boolean {
-  const sanitized = sanitizeIndianPhoneNumber(phone);
-  return INDIAN_PHONE_REGEX.test(sanitized);
+export const SUPPORTED_COUNTRIES: CountryConfig[] = [
+  {
+    code: "IN",
+    name: "India",
+    dialCode: "+91",
+    flag: "🇮🇳",
+    maxLength: 10,
+    minLength: 10,
+    placeholder: "9876543210",
+    regex: /^[6-9]\d{9}$/,
+    error: "Please enter a valid 10-digit Indian phone number (starting with 6, 7, 8, or 9)",
+  },
+  {
+    code: "US",
+    name: "United States",
+    dialCode: "+1",
+    flag: "🇺🇸",
+    maxLength: 10,
+    minLength: 10,
+    placeholder: "2025550143",
+    regex: /^[2-9]\d{9}$/,
+    error: "Please enter a valid 10-digit US/Canada phone number",
+  },
+  {
+    code: "GB",
+    name: "United Kingdom",
+    dialCode: "+44",
+    flag: "🇬🇧",
+    maxLength: 10,
+    minLength: 10,
+    placeholder: "7911123456",
+    regex: /^7\d{9}$/,
+    error: "Please enter a valid 10-digit UK mobile number (starting with 7)",
+  },
+  {
+    code: "AE",
+    name: "United Arab Emirates",
+    dialCode: "+971",
+    flag: "🇦🇪",
+    maxLength: 9,
+    minLength: 9,
+    placeholder: "501234567",
+    regex: /^5\d{8}$/,
+    error: "Please enter a valid 9-digit UAE mobile number (starting with 5)",
+  },
+  {
+    code: "SG",
+    name: "Singapore",
+    dialCode: "+65",
+    flag: "🇸🇬",
+    maxLength: 8,
+    minLength: 8,
+    placeholder: "81234567",
+    regex: /^[89]\d{7}$/,
+    error: "Please enter a valid 8-digit Singapore mobile number (starting with 8 or 9)",
+  },
+  {
+    code: "AU",
+    name: "Australia",
+    dialCode: "+61",
+    flag: "🇦🇺",
+    maxLength: 9,
+    minLength: 9,
+    placeholder: "412345678",
+    regex: /^4\d{8}$/,
+    error: "Please enter a valid 9-digit Australian mobile number (starting with 4)",
+  },
+  {
+    code: "CA",
+    name: "Canada",
+    dialCode: "+1",
+    flag: "🇨🇦",
+    maxLength: 10,
+    minLength: 10,
+    placeholder: "4165550143",
+    regex: /^[2-9]\d{9}$/,
+    error: "Please enter a valid 10-digit Canadian phone number",
+  },
+  {
+    code: "DE",
+    name: "Germany",
+    dialCode: "+49",
+    flag: "🇩🇪",
+    maxLength: 11,
+    minLength: 10,
+    placeholder: "15123456789",
+    regex: /^1[567]\d{8,9}$/,
+    error: "Please enter a valid German mobile number",
+  },
+];
+
+export const INDIAN_PHONE_REGEX = /^[6-9]\d{9}$/;
+
+export function sanitizePhoneNumber(phone: string): string {
+  if (!phone || typeof phone !== "string") return "";
+  return phone.replace(/[\s\-\(\)]/g, "").trim();
+}
+
+export function isValidPhoneForCountry(phone: string, countryCode: string = "IN"): { valid: boolean; error?: string } {
+  const country = SUPPORTED_COUNTRIES.find((c) => c.code === countryCode) || SUPPORTED_COUNTRIES[0];
+  const digitsOnly = phone.replace(/\D/g, "");
+  
+  if (!country.regex.test(digitsOnly)) {
+    return { valid: false, error: country.error };
+  }
+  return { valid: true };
 }
 
 export const INDIAN_PHONE_ERROR =
@@ -125,14 +221,19 @@ export const CreateBookingSchema = z.object({
   scheduledStart: z.string().datetime({ message: "scheduledStart must be an ISO 8601 string" }),
   clientName: z.string().min(2, "Name must be at least 2 characters"),
   clientEmail: AllowedEmailSchema,
-  clientPhone: z
-    .string()
-    .transform((val) => sanitizeIndianPhoneNumber(val))
-    .refine((val) => INDIAN_PHONE_REGEX.test(val), {
-      message: INDIAN_PHONE_ERROR,
-    }),
+  countryCode: z.string().default("IN").optional(),
+  clientPhone: z.string().min(7, "Phone number is required"),
   notes: z.string().max(1000).optional(),
-});
+}).refine(
+  (data) => {
+    const check = isValidPhoneForCountry(data.clientPhone, data.countryCode || "IN");
+    return check.valid;
+  },
+  {
+    message: "Invalid phone number for selected country",
+    path: ["clientPhone"],
+  }
+);
 
 export const CancelBookingSchema = z.object({
   cancelToken: z.string().min(1, "Cancel token is required"),

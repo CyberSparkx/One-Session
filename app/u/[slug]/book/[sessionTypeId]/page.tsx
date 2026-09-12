@@ -29,9 +29,9 @@ import AnimatedBackground from "@/components/AnimatedBackground";
 import {
   isAllowedEmailDomain,
   ALLOWED_EMAIL_ERROR,
-  isValidIndianPhoneNumber,
-  sanitizeIndianPhoneNumber,
-  INDIAN_PHONE_ERROR,
+  SUPPORTED_COUNTRIES,
+  isValidPhoneForCountry,
+  CountryConfig,
 } from "@/lib/validations";
 
 interface Slot {
@@ -93,6 +93,7 @@ export default function BookingPage({
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
 
+  const [selectedCountry, setSelectedCountry] = useState<string>("IN");
   const [formData, setFormData] = useState({
     clientName: "",
     clientEmail: "",
@@ -101,6 +102,10 @@ export default function BookingPage({
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  const currentCountry = useMemo<CountryConfig>(() => {
+    return SUPPORTED_COUNTRIES.find((c) => c.code === selectedCountry) || SUPPORTED_COUNTRIES[0];
+  }, [selectedCountry]);
 
   const isFormValid =
     Boolean(selectedSlot) &&
@@ -208,8 +213,9 @@ export default function BookingPage({
       return;
     }
 
-    if (!isValidIndianPhoneNumber(formData.clientPhone)) {
-      setError(INDIAN_PHONE_ERROR);
+    const phoneCheck = isValidPhoneForCountry(formData.clientPhone, selectedCountry);
+    if (!phoneCheck.valid) {
+      setError(phoneCheck.error || "Please enter a valid phone number");
       return;
     }
 
@@ -229,6 +235,9 @@ export default function BookingPage({
         }
       }
 
+      // Combine country dial code with clean digits
+      const formattedPhone = `${currentCountry.dialCode} ${formData.clientPhone.trim()}`;
+
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -237,7 +246,8 @@ export default function BookingPage({
           scheduledStart: selectedSlot.startTime,
           clientName: formData.clientName,
           clientEmail: formData.clientEmail,
-          clientPhone: formData.clientPhone,
+          countryCode: selectedCountry,
+          clientPhone: formattedPhone,
           notes: formData.notes,
         }),
       });
@@ -505,39 +515,58 @@ export default function BookingPage({
                   <p className="text-[10px] text-gray-400 mt-1">Only @gmail.com or @yahoo.com email addresses are accepted</p>
                 </div>
 
-                {/* Phone */}
+                {/* Phone & Country Picker */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-[11px] font-semibold text-gray-700 uppercase tracking-wider">
-                      Mobile Number (India)
+                      Mobile Number
                     </label>
                     <span className="text-[10px] text-gray-400 font-mono">
-                      {formData.clientPhone.length}/10 digits
+                      {formData.clientPhone.length}/{currentCountry.maxLength} digits
                     </span>
                   </div>
-                  <div className="relative flex items-center">
-                    <div className="absolute left-3 flex items-center gap-1.5 pointer-events-none text-xs font-bold text-gray-700 border-r border-gray-200 pr-2.5">
-                      <span className="text-base leading-none">🇮🇳</span>
-                      <span>+91</span>
+                  <div className="flex items-center gap-1.5">
+                    {/* Country Selector Dropdown */}
+                    <div className="relative flex-shrink-0">
+                      <select
+                        aria-label="Select Country"
+                        value={selectedCountry}
+                        onChange={(e) => {
+                          setSelectedCountry(e.target.value);
+                          setFormData({ ...formData, clientPhone: "" });
+                        }}
+                        className="appearance-none pl-3 pr-7 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-xs font-bold focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all cursor-pointer shadow-2xs"
+                      >
+                        {SUPPORTED_COUNTRIES.map((c) => (
+                          <option key={c.code} value={c.code}>
+                            {c.flag} {c.code} ({c.dialCode})
+                          </option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">
+                        ▼
+                      </div>
                     </div>
-                    <input
-                      type="tel"
-                      required
-                      inputMode="numeric"
-                      pattern="[6-9][0-9]{9}"
-                      maxLength={10}
-                      placeholder="9876543210"
-                      value={formData.clientPhone}
-                      onChange={(e) => {
-                        // Allow only numeric digits and max 10 characters
-                        const onlyDigits = e.target.value.replace(/\D/g, "").slice(0, 10);
-                        setFormData({ ...formData, clientPhone: onlyDigits });
-                      }}
-                      className="w-full pl-20 pr-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-xs font-medium tracking-wide focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                    />
+
+                    {/* Phone Number Input */}
+                    <div className="relative flex-1">
+                      <input
+                        type="tel"
+                        required
+                        inputMode="numeric"
+                        maxLength={currentCountry.maxLength}
+                        placeholder={currentCountry.placeholder}
+                        value={formData.clientPhone}
+                        onChange={(e) => {
+                          const onlyDigits = e.target.value.replace(/\D/g, "").slice(0, currentCountry.maxLength);
+                          setFormData({ ...formData, clientPhone: onlyDigits });
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-xs font-medium tracking-wide focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                      />
+                    </div>
                   </div>
                   <p className="text-[10px] text-gray-400 mt-1">
-                    Enter your 10-digit Indian mobile number (starts with 6, 7, 8, or 9)
+                    {currentCountry.name}: {currentCountry.dialCode} • {currentCountry.maxLength} digits ({currentCountry.placeholder})
                   </p>
                 </div>
 
