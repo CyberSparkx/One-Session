@@ -116,8 +116,22 @@ export default function SessionTypesPage() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to save session type");
+        let errorMsg = "Failed to save session type";
+        try {
+          const data = await res.json();
+          if (data.details) {
+            const fieldErrors = Object.entries(data.details)
+              .map(([field, msgs]: [string, any]) => `${field}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`)
+              .join("; ");
+            errorMsg = `${data.error || errorMsg} (${fieldErrors})`;
+          } else {
+            errorMsg = data.error || errorMsg;
+          }
+        } catch {
+          const text = await res.text().catch(() => "");
+          if (text) errorMsg = text;
+        }
+        throw new Error(errorMsg);
       }
 
       setModalOpen(false);
