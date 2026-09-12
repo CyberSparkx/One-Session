@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import prisma from "./prisma";
+import { isAllowedEmailDomain, ALLOWED_EMAIL_ERROR } from "./validations";
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -21,8 +22,14 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Missing email or password");
         }
 
+        const normalizedEmail = credentials.email.toLowerCase().trim();
+
+        if (!isAllowedEmailDomain(normalizedEmail)) {
+          throw new Error(ALLOWED_EMAIL_ERROR);
+        }
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase().trim() },
+          where: { email: normalizedEmail },
           include: { creatorProfile: true },
         });
 
@@ -63,10 +70,12 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account }) {
-      if (account?.provider === "google") {
-        const email = user.email?.toLowerCase().trim();
-        if (!email) return false;
+      const email = user.email?.toLowerCase().trim();
+      if (!email || !isAllowedEmailDomain(email)) {
+        return false;
+      }
 
+      if (account?.provider === "google") {
         let existingUser = await prisma.user.findUnique({
           where: { email },
           include: { creatorProfile: true },

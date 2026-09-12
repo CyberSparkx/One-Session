@@ -6,6 +6,7 @@ import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { Sparkles, ArrowRight, Lock, Mail, AlertCircle, CheckCircle2, ShieldCheck, Zap, TrendingUp } from "lucide-react";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
+import { isAllowedEmailDomain, ALLOWED_EMAIL_ERROR } from "@/lib/validations";
 
 const BRAND_HIGHLIGHTS = [
   { icon: ShieldCheck, text: "Razorpay-verified secure payouts" },
@@ -16,8 +17,8 @@ const BRAND_HIGHLIGHTS = [
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const registered = searchParams.get("registered");
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const registered = searchParams.get("registered");
 
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
@@ -26,6 +27,12 @@ function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!isAllowedEmailDomain(formData.email)) {
+      setError(ALLOWED_EMAIL_ERROR);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const result = await signIn("credentials", {
@@ -176,7 +183,7 @@ function LoginForm() {
               {/* Email */}
               <div>
                 <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
-                  Email Address
+                  Email Address (Gmail or Yahoo only)
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 absolute left-3.5 top-3 text-gray-400" />
@@ -184,12 +191,13 @@ function LoginForm() {
                     id="login-email"
                     type="email"
                     required
-                    placeholder="you@domain.com"
+                    placeholder="you@gmail.com or you@yahoo.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-xs focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                   />
                 </div>
+                <p className="text-[11px] text-gray-400 mt-1">Only @gmail.com or @yahoo.com addresses are permitted</p>
               </div>
 
               {/* Password */}

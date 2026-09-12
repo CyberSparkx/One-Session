@@ -26,6 +26,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import AnimatedBackground from "@/components/AnimatedBackground";
+import { isAllowedEmailDomain, ALLOWED_EMAIL_ERROR } from "@/lib/validations";
 
 interface Slot {
   startTime: string;
@@ -195,6 +196,12 @@ export default function BookingPage({
       setError("Please select an available time slot");
       return;
     }
+
+    if (!isAllowedEmailDomain(formData.clientEmail)) {
+      setError(ALLOWED_EMAIL_ERROR);
+      return;
+    }
+
     setSubmitting(true);
     setError("");
 
@@ -227,7 +234,8 @@ export default function BookingPage({
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Failed to initiate booking");
+        const errorMsg = data.details?.clientEmail?.[0] || data.error || "Failed to initiate booking";
+        setError(errorMsg);
         setSubmitting(false);
         return;
       }
@@ -465,19 +473,20 @@ export default function BookingPage({
                 {/* Email */}
                 <div>
                   <label className="block text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                    Email Address
+                    Email Address (Gmail or Yahoo only)
                   </label>
                   <div className="relative">
                     <Mail className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
                     <input
                       type="email"
                       required
-                      placeholder="maya@example.com"
+                      placeholder="maya@gmail.com or maya@yahoo.com"
                       value={formData.clientEmail}
                       onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
                       className="w-full pl-9 pr-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-xs focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                     />
                   </div>
+                  <p className="text-[10px] text-gray-400 mt-1">Only @gmail.com or @yahoo.com email addresses are accepted</p>
                 </div>
 
                 {/* Phone */}

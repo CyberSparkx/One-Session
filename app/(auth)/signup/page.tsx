@@ -14,6 +14,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
+import { isAllowedEmailDomain, ALLOWED_EMAIL_ERROR } from "@/lib/validations";
 
 const STEPS = [
   { num: "01", text: "Create your account — free, takes 60 seconds" },
@@ -37,6 +38,12 @@ export default function SignUpPage() {
     e.preventDefault();
     setErrors({});
     setGeneralError("");
+
+    if (!isAllowedEmailDomain(formData.email)) {
+      setErrors({ email: ALLOWED_EMAIL_ERROR });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -213,7 +220,7 @@ export default function SignUpPage() {
               {/* Email */}
               <div>
                 <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
-                  Work Email
+                  Email Address (Gmail or Yahoo only)
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 absolute left-3.5 top-3 text-gray-400" />
@@ -221,13 +228,17 @@ export default function SignUpPage() {
                     id="signup-email"
                     type="email"
                     required
-                    placeholder="alex@domain.com"
+                    placeholder="alex@gmail.com or alex@yahoo.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-xs focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                   />
                 </div>
-                {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
+                {errors.email ? (
+                  <p className="text-xs text-red-600 mt-1">{errors.email}</p>
+                ) : (
+                  <p className="text-[11px] text-gray-400 mt-1">Only @gmail.com or @yahoo.com addresses are permitted</p>
+                )}
               </div>
 
               {/* Password */}

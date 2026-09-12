@@ -6,6 +6,9 @@ import {
   SessionTypeSchema,
   CreatorProfileSchema,
   AvailabilityRuleSchema,
+  SignUpSchema,
+  LoginSchema,
+  isAllowedEmailDomain,
 } from "../lib/validations.ts";
 
 describe("Input Validation with Zod (AGENTS.md Rule #5)", () => {
@@ -14,17 +17,25 @@ describe("Input Validation with Zod (AGENTS.md Rule #5)", () => {
       sessionTypeId: "6a9c580b9bb03b1bb009df4a",
       scheduledStart: "2026-09-09T04:30:00.000Z",
       clientName: "Aarav Gupta",
-      clientEmail: "aarav@example.com",
+      clientEmail: "aarav@gmail.com",
       clientPhone: "+919876543210",
       notes: "Looking forward to the consultation",
     };
 
-    it("should accept valid booking input", () => {
+    it("should accept valid booking input with gmail", () => {
       const result = CreateBookingSchema.safeParse(validBooking);
       assert.strictEqual(result.success, true);
     });
 
-    it("should reject invalid email", () => {
+    it("should accept valid booking input with yahoo email", () => {
+      const result = CreateBookingSchema.safeParse({
+        ...validBooking,
+        clientEmail: "priya.sharma@yahoo.com",
+      });
+      assert.strictEqual(result.success, true);
+    });
+
+    it("should reject invalid email syntax", () => {
       const result = CreateBookingSchema.safeParse({
         ...validBooking,
         clientEmail: "not-an-email",
@@ -32,6 +43,28 @@ describe("Input Validation with Zod (AGENTS.md Rule #5)", () => {
       assert.strictEqual(result.success, false);
       if (!result.success) {
         assert.ok(result.error.flatten().fieldErrors.clientEmail);
+      }
+    });
+
+    it("should reject non-gmail/yahoo emails to prevent fraudulent bookings", () => {
+      const invalidDomains = [
+        "scammer@outlook.com",
+        "bot@hotmail.com",
+        "test@proton.me",
+        "user@example.com",
+        "fake@tempmail.io",
+        "hacker@mail.ru",
+      ];
+      for (const email of invalidDomains) {
+        const result = CreateBookingSchema.safeParse({
+          ...validBooking,
+          clientEmail: email,
+        });
+        assert.strictEqual(
+          result.success,
+          false,
+          `Expected ${email} to be rejected by booking schema`
+        );
       }
     });
 
@@ -185,6 +218,62 @@ describe("Input Validation with Zod (AGENTS.md Rule #5)", () => {
         cancelToken: "",
       });
       assert.strictEqual(result.success, false);
+    });
+  });
+
+  describe("SignUpSchema & LoginSchema Email Domain Restriction", () => {
+    it("should accept valid Gmail address for signup and login", () => {
+      const signup = SignUpSchema.safeParse({
+        name: "Test Creator",
+        email: "creator@gmail.com",
+        password: "password123",
+      });
+      assert.strictEqual(signup.success, true);
+
+      const login = LoginSchema.safeParse({
+        email: "creator@gmail.com",
+        password: "password123",
+      });
+      assert.strictEqual(login.success, true);
+    });
+
+    it("should accept valid Yahoo address for signup and login", () => {
+      const signup = SignUpSchema.safeParse({
+        name: "Test Creator",
+        email: "creator@yahoo.com",
+        password: "password123",
+      });
+      assert.strictEqual(signup.success, true);
+
+      const login = LoginSchema.safeParse({
+        email: "creator@yahoo.in",
+        password: "password123",
+      });
+      assert.strictEqual(login.success, true);
+    });
+
+    it("should reject all other domains (outlook, hotmail, proton, etc.) for signup and login", () => {
+      const invalidEmails = [
+        "user@outlook.com",
+        "user@hotmail.com",
+        "user@proton.me",
+        "user@icloud.com",
+        "user@customdomain.io",
+      ];
+      for (const email of invalidEmails) {
+        const signup = SignUpSchema.safeParse({
+          name: "Test Creator",
+          email,
+          password: "password123",
+        });
+        assert.strictEqual(signup.success, false, `Expected ${email} to be rejected in signup`);
+
+        const login = LoginSchema.safeParse({
+          email,
+          password: "password123",
+        });
+        assert.strictEqual(login.success, false, `Expected ${email} to be rejected in login`);
+      }
     });
   });
 });

@@ -1,14 +1,48 @@
 import { z } from "zod";
 
+/**
+ * Validates whether an email belongs to Google (Gmail) or Yahoo.
+ * Blocks all other custom domains and providers to prevent fraud.
+ */
+export function isAllowedEmailDomain(email: string): boolean {
+  if (!email || typeof email !== "string") return false;
+  const trimmed = email.toLowerCase().trim();
+  const atIndex = trimmed.lastIndexOf("@");
+  if (atIndex === -1) return false;
+  const domain = trimmed.slice(atIndex + 1);
+
+  // Gmail / Googlemail / Ymail
+  if (domain === "gmail.com" || domain === "googlemail.com" || domain === "ymail.com") {
+    return true;
+  }
+
+  // Yahoo domains (e.g. yahoo.com, yahoo.in, yahoo.co.uk, yahoo.ca)
+  if (/^yahoo\.[a-z]{2,}(\.[a-z]{2,})?$/.test(domain)) {
+    return true;
+  }
+
+  return false;
+}
+
+export const ALLOWED_EMAIL_ERROR =
+  "Only Google (Gmail) or Yahoo email addresses are allowed (e.g., @gmail.com, @yahoo.com)";
+
+export const AllowedEmailSchema = z
+  .string()
+  .email("Valid email address is required")
+  .refine(isAllowedEmailDomain, {
+    message: ALLOWED_EMAIL_ERROR,
+  });
+
 export const SignUpSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
+  email: AllowedEmailSchema,
   password: z.string().min(8, "Password must be at least 8 characters"),
   timezone: z.string().default("Asia/Kolkata"),
 });
 
 export const LoginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: AllowedEmailSchema,
   password: z.string().min(1, "Password is required"),
 });
 
@@ -58,7 +92,7 @@ export const CreateBookingSchema = z.object({
   sessionTypeId: z.string().min(1, "Session type is required"),
   scheduledStart: z.string().datetime({ message: "scheduledStart must be an ISO 8601 string" }),
   clientName: z.string().min(2, "Name must be at least 2 characters"),
-  clientEmail: z.string().email("Valid email is required"),
+  clientEmail: AllowedEmailSchema,
   clientPhone: z.string().min(5, "Valid phone number is required"),
   notes: z.string().max(1000).optional(),
 });
