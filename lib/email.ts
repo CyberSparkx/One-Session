@@ -293,47 +293,8 @@ export async function sendBookingCancellationEmail(data: BookingCancellationEmai
       `,
     });
 
-    if (clientRes.error && clientRes.error.message.includes("only send testing emails")) {
-      console.warn(`Resend Test limitation: Delivering client cancellation copy to creator (${data.creatorEmail})`);
-      await resend.emails.send({
-        from: fromEmail,
-        to: data.creatorEmail,
-        subject: `[Client Copy] ${clientSubject}`,
-        html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
-            <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px; color: #92400e;">
-              <strong>Resend Test Mode Note:</strong> This is a copy of the cancellation notice intended for <strong>${data.clientEmail}</strong> (in Resend sandbox, emails are routed to your verified developer email).
-            </div>
-            <h2 style="color: #dc2626;">Session Cancelled</h2>
-            <p>Hi ${data.clientName},</p>
-            <p>
-              ${
-                isClientCancelled
-                  ? `You have cancelled your upcoming session with <strong>${data.creatorName}</strong>.`
-                  : `Your session with <strong>${data.creatorName}</strong> has been cancelled.`
-              }
-            </p>
-            <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; margin: 20px 0;">
-              <p style="margin: 4px 0;"><strong>Session:</strong> ${data.sessionTitle}</p>
-              <p style="margin: 4px 0;"><strong>Date:</strong> ${formattedDate} at ${formattedTime}</p>
-              <p style="margin: 4px 0;"><strong>Reason:</strong> ${data.reason || (isClientCancelled ? "Client requested cancellation" : "Cancelled by creator")}</p>
-            </div>
-            ${
-              isRefunded
-                ? `
-              <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px; margin: 20px 0;">
-                <p style="margin: 4px 0;"><strong>Refund Type:</strong> ${refundTitle}</p>
-                <p style="margin: 4px 0;"><strong>Refund Amount:</strong> ₹${refundRupees}</p>
-                <p style="margin: 8px 0 0 0; font-size: 12px; color: #15803d;">
-                  Processed via Razorpay (5–7 business days).
-                </p>
-              </div>
-            `
-                : ""
-            }
-          </div>
-        `,
-      });
+    if (clientRes.error) {
+      console.warn("Resend client cancellation email note:", clientRes.error.message);
     }
   } catch (err) {
     console.error("Failed to send client cancellation email via Resend:", err);
