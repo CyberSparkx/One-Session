@@ -214,7 +214,7 @@ export default async function LandingPage() {
               </div>
               <input
                 type="text"
-                placeholder="yourname"
+                placeholder="johndoe"
                 className="flex-1 px-4 py-3.5 text-sm font-500 outline-none"
                 style={{
                   background: "var(--bg-page)",
@@ -256,16 +256,14 @@ export default async function LandingPage() {
                   className="flex-1 mx-4 px-3 py-1 rounded-md text-xs font-mono"
                   style={{ background: "var(--bg-page)", color: "var(--text-muted)", border: "1px solid var(--border-base)" }}
                 >
-                  sessionbook.in/u/{primaryCreator ? primaryCreator.slug : "yourname"}
+                  sessionbook.in/u/john-doe
                 </div>
-                {primaryCreator && (
-                  <Link
-                    href={`/u/${primaryCreator.slug}`}
-                    className="text-[11px] font-semibold text-orange-600 flex items-center gap-1 hover:underline"
-                  >
-                    View Live <ExternalLink className="w-3 h-3" />
-                  </Link>
-                )}
+                <Link
+                  href="/u/john-doe"
+                  className="text-[11px] font-semibold text-orange-600 flex items-center gap-1 hover:underline"
+                >
+                  View Sample <ExternalLink className="w-3 h-3" />
+                </Link>
               </div>
 
               {/* Creator dashboard preview */}
@@ -283,14 +281,14 @@ export default async function LandingPage() {
                       className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-800"
                       style={{ background: "var(--orange)" }}
                     >
-                      {primaryCreator ? primaryCreator.user.name[0].toUpperCase() : "Y"}
+                      J
                     </div>
                     <div className="overflow-hidden">
                       <div className="text-xs font-700 truncate" style={{ color: "var(--text-primary)" }}>
-                        {primaryCreator ? primaryCreator.user.name : "Your Creator Page"}
+                        John Doe
                       </div>
                       <div className="text-[10px] font-mono truncate" style={{ color: "var(--text-muted)" }}>
-                        @{primaryCreator ? primaryCreator.slug : "yourname"}
+                        @john-doe
                       </div>
                     </div>
                   </div>
@@ -314,7 +312,7 @@ export default async function LandingPage() {
                 <div className="md:col-span-2 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-800" style={{ color: "var(--text-primary)" }}>
-                      {primaryCreator ? `Creator Profile: ${primaryCreator.user.name}` : "Ready to Start Earning"}
+                      Creator Profile: John Doe
                     </div>
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                       Live & Verified
@@ -324,7 +322,7 @@ export default async function LandingPage() {
                   <div className="grid grid-cols-3 gap-3">
                     <div className="card p-3">
                       <div className="text-lg font-800" style={{ color: "var(--text-primary)" }}>
-                        {primaryCreator ? primaryCreator.sessionTypes.length : 0}
+                        3
                       </div>
                       <div className="text-[10px] font-500" style={{ color: "var(--text-muted)" }}>Session Types</div>
                     </div>
@@ -344,41 +342,32 @@ export default async function LandingPage() {
                       <span className="text-xs font-700" style={{ color: "var(--text-primary)" }}>
                         Bookable Sessions
                       </span>
-                      {primaryCreator && (
-                        <Link
-                          href={`/u/${primaryCreator.slug}`}
-                          className="text-[11px] font-semibold text-orange-600 hover:underline"
-                        >
-                          Book a slot →
-                        </Link>
-                      )}
+                      <Link
+                        href="/u/john-doe"
+                        className="text-[11px] font-semibold text-orange-600 hover:underline"
+                      >
+                        Book a slot →
+                      </Link>
                     </div>
-                    {primaryCreator && primaryCreator.sessionTypes.length > 0 ? (
-                      <div className="space-y-2">
-                        {primaryCreator.sessionTypes.map((st) => (
-                          <div
-                            key={st.id}
-                            className="flex items-center justify-between py-1.5 border-t text-xs"
-                            style={{ borderColor: "var(--border-base)" }}
-                          >
-                            <span className="font-600" style={{ color: "var(--text-primary)" }}>{st.title}</span>
-                            <span style={{ color: "var(--text-muted)" }}>{st.durationMinutes} min</span>
-                            <span className="font-700" style={{ color: "var(--green)" }}>
-                              ₹{(st.priceInPaise / 100).toLocaleString("en-IN")}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="py-3 text-center border-t" style={{ borderColor: "var(--border-base)" }}>
-                        <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                          No session types published yet. Set your price and duration in under 2 minutes.
-                        </p>
-                        <Link href="/signup" className="btn btn-primary text-xs mt-2 py-1 px-3 inline-flex">
-                          Create Session Type
-                        </Link>
-                      </div>
-                    )}
+                    <div className="space-y-2">
+                      {[
+                        { id: "s1", title: "30-Minute 1:1 Consultation", durationMinutes: 30, priceInPaise: 150000 },
+                        { id: "s2", title: "60-Minute Strategy & Mentorship", durationMinutes: 60, priceInPaise: 300000 },
+                        { id: "s3", title: "Portfolio & Resume Review", durationMinutes: 45, priceInPaise: 200000 },
+                      ].map((st) => (
+                        <div
+                          key={st.id}
+                          className="flex items-center justify-between py-1.5 border-t text-xs"
+                          style={{ borderColor: "var(--border-base)" }}
+                        >
+                          <span className="font-600" style={{ color: "var(--text-primary)" }}>{st.title}</span>
+                          <span style={{ color: "var(--text-muted)" }}>{st.durationMinutes} min</span>
+                          <span className="font-700" style={{ color: "var(--green)" }}>
+                            ₹{(st.priceInPaise / 100).toLocaleString("en-IN")}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>

@@ -113,8 +113,8 @@ describe("Input Validation with Zod (AGENTS.md Rule #5)", () => {
   describe("CreatorProfileSchema", () => {
     it("should validate a valid creator slug and profile", () => {
       const result = CreatorProfileSchema.safeParse({
-        name: "Naren Roy",
-        slug: "naren-roy-tech",
+        name: "John Doe",
+        slug: "john-doe-tech",
         timezone: "Asia/Kolkata",
         isPublished: true,
       });
@@ -123,8 +123,8 @@ describe("Input Validation with Zod (AGENTS.md Rule #5)", () => {
 
     it("should reject slugs with capital letters or special symbols", () => {
       const result = CreatorProfileSchema.safeParse({
-        name: "Naren Roy",
-        slug: "Naren_Roy@123!",
+        name: "John Doe",
+        slug: "John_Doe@123!",
         timezone: "Asia/Kolkata",
       });
       assert.strictEqual(result.success, false);
@@ -132,8 +132,8 @@ describe("Input Validation with Zod (AGENTS.md Rule #5)", () => {
 
     it("should reject slug shorter than 3 characters", () => {
       const result = CreatorProfileSchema.safeParse({
-        name: "Naren Roy",
-        slug: "nr",
+        name: "John Doe",
+        slug: "jd",
         timezone: "Asia/Kolkata",
       });
       assert.strictEqual(result.success, false);

@@ -7,7 +7,7 @@ describe("Live API Endpoints & Smoke Tests", async () => {
   // Check server reachability
   let isServerReachable = false;
   try {
-    const healthRes = await fetch(`${BASE_URL}/api/public/naren-roy`, { method: "HEAD" });
+    const healthRes = await fetch(`${BASE_URL}/api/public/john-doe`, { method: "HEAD" });
     if (healthRes.status < 500) {
       isServerReachable = true;
     }
@@ -21,11 +21,11 @@ describe("Live API Endpoints & Smoke Tests", async () => {
       return;
     }
 
-    const res = await fetch(`${BASE_URL}/api/public/naren-roy`);
+    const res = await fetch(`${BASE_URL}/api/public/john-doe`);
     assert.strictEqual(res.status, 200, "Profile endpoint must return HTTP 200");
 
     const data = await res.json();
-    assert.strictEqual(data.slug, "naren-roy");
+    assert.strictEqual(data.slug, "john-doe");
     assert.ok(Array.isArray(data.sessionTypes), "Profile must include sessionTypes array");
   });
 
@@ -35,17 +35,17 @@ describe("Live API Endpoints & Smoke Tests", async () => {
       return;
     }
 
-    const profileRes = await fetch(`${BASE_URL}/api/public/naren-roy`);
+    const profileRes = await fetch(`${BASE_URL}/api/public/john-doe`);
     const profile = await profileRes.json();
     const sessionTypeId = profile.sessionTypes?.[0]?.id;
 
     if (!sessionTypeId) {
-      t.skip("No active session types found for naren-roy");
+      t.skip("No active session types found for john-doe");
       return;
     }
 
     const res = await fetch(
-      `${BASE_URL}/api/public/naren-roy/slots?sessionTypeId=${sessionTypeId}&date=2026-09-09`
+      `${BASE_URL}/api/public/john-doe/slots?sessionTypeId=${sessionTypeId}&date=2026-09-09`
     );
     assert.strictEqual(res.status, 200, "Slots endpoint must return HTTP 200");
 
