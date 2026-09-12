@@ -142,17 +142,25 @@ export function sanitizePhoneNumber(phone: string): string {
 }
 
 export function isValidPhoneForCountry(phone: string, countryCode: string = "IN"): { valid: boolean; error?: string } {
-  const country = SUPPORTED_COUNTRIES.find((c) => c.code === countryCode) || SUPPORTED_COUNTRIES[0];
   const digitsOnly = phone.replace(/\D/g, "");
   
-  if (!country.regex.test(digitsOnly)) {
-    return { valid: false, error: country.error };
+  // Require exactly 10 digits for India or default
+  if (countryCode === "IN" || !countryCode) {
+    if (digitsOnly.length !== 10) {
+      return { valid: false, error: "Please enter a 10-digit phone number" };
+    }
+    return { valid: true };
   }
+
+  // For other countries: 7 to 15 digits
+  if (digitsOnly.length < 7 || digitsOnly.length > 15) {
+    return { valid: false, error: "Please enter a valid phone number" };
+  }
+
   return { valid: true };
 }
 
-export const INDIAN_PHONE_ERROR =
-  "Please enter a valid 10-digit Indian phone number (starting with 6, 7, 8, or 9)";
+export const INDIAN_PHONE_ERROR = "Please enter a 10-digit phone number";
 
 export const AllowedEmailSchema = z
   .string()

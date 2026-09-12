@@ -235,22 +235,22 @@ export default function BookingPage({
         }
       }
 
-      // Combine country dial code with clean digits
-      const formattedPhone = `${currentCountry.dialCode} ${formData.clientPhone.trim()}`;
+    // Extract only digits entered by user (10 digits for India)
+    const rawDigits = formData.clientPhone.replace(/\D/g, "");
 
-      const res = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionTypeId,
-          scheduledStart: selectedSlot.startTime,
-          clientName: formData.clientName,
-          clientEmail: formData.clientEmail,
-          countryCode: selectedCountry,
-          clientPhone: formattedPhone,
-          notes: formData.notes,
-        }),
-      });
+    const res = await fetch("/api/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionTypeId,
+        scheduledStart: selectedSlot.startTime,
+        clientName: formData.clientName,
+        clientEmail: formData.clientEmail,
+        countryCode: selectedCountry,
+        clientPhone: rawDigits,
+        notes: formData.notes,
+      }),
+    });
 
       const data = await res.json();
 
