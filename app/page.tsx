@@ -97,7 +97,7 @@ export default async function LandingPage() {
             select: { id: true, title: true, priceInPaise: true, durationMinutes: true },
           },
         },
-        take: 6,
+        take: 3,
       }),
     ]);
     publishedCreatorsCount = creatorsCount;
@@ -627,6 +627,7 @@ export default async function LandingPage() {
                           <img
                             src={creator.avatarUrl}
                             alt={creator.user.name}
+                            referrerPolicy="no-referrer"
                             className="w-12 h-12 rounded-full object-cover border"
                             style={{ borderColor: "var(--border-base)" }}
                           />
