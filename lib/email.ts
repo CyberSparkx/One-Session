@@ -356,3 +356,118 @@ export async function sendBookingCancellationEmail(data: BookingCancellationEmai
     console.error("Failed to send creator cancellation confirmation via Resend:", err);
   }
 }
+
+export interface PayoutEmailData {
+  creatorName: string;
+  creatorEmail: string;
+  payoutAmountPaise: number;
+  payoutMethod: string;
+  destinationSummary?: string;
+  reference?: string;
+  sessionsCount?: number;
+}
+
+/**
+ * 1. Email to Creator when Admin initiates payout processing
+ */
+export async function sendPayoutInitiatedEmail(data: PayoutEmailData) {
+  const payoutRupees = (data.payoutAmountPaise / 100).toLocaleString("en-IN", {
+    minimumFractionDigits: (data.payoutAmountPaise / 100) % 1 !== 0 ? 2 : 0,
+    maximumFractionDigits: 2,
+  });
+
+  if (!resend) {
+    console.log("-----------------------------------------");
+    console.log(`[EMAIL DISPATCH SIMULATION (Resend not configured)]`);
+    console.log(`To Creator: ${data.creatorEmail}`);
+    console.log(`Subject: Payout Initiated: ₹${payoutRupees} is being processed`);
+    console.log(`Method: ${data.payoutMethod.toUpperCase()}`);
+    console.log("-----------------------------------------");
+    return;
+  }
+
+  try {
+    const res = await resend.emails.send({
+      from: fromEmail,
+      to: data.creatorEmail,
+      subject: `Payout Initiated: ₹${payoutRupees} is being processed`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
+          <h2 style="color: #2563eb;">Your payout has been initiated!</h2>
+          <p>Hi ${data.creatorName},</p>
+          <p>We've initiated a payout for your earnings on SessionBook.</p>
+
+          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin: 20px 0;">
+            <p style="margin: 4px 0; font-size: 16px;"><strong>Amount:</strong> <span style="color: #2563eb; font-weight: bold;">₹${payoutRupees}</span></p>
+            <p style="margin: 4px 0;"><strong>Transfer Mode:</strong> ${data.payoutMethod.toUpperCase()}</p>
+            ${data.destinationSummary ? `<p style="margin: 4px 0;"><strong>Destination:</strong> ${data.destinationSummary}</p>` : ""}
+            ${data.sessionsCount ? `<p style="margin: 4px 0;"><strong>Completed Sessions:</strong> ${data.sessionsCount}</p>` : ""}
+            <p style="margin: 4px 0; color: #475569; font-size: 13px;"><strong>Status:</strong> Processing (T+1 to T+2 banking hours)</p>
+          </div>
+
+          <p style="font-size: 13px; color: #64748b;">Our system or payment partner is currently dispatching this settlement to your designated account. You will receive another notification once the transaction is finalized.</p>
+          <p style="color: #64748b; font-size: 13px; margin-top: 30px;">Best regards,<br/>SessionBook Finance Team</p>
+        </div>
+      `,
+    });
+
+    if (res.error && res.error.message.includes("only send testing emails")) {
+      console.warn(`Resend Test limitation: Email not sent to ${data.creatorEmail} due to unverified domain sandbox.`);
+    }
+  } catch (err) {
+    console.error("Failed to send payout initiated email via Resend:", err);
+  }
+}
+
+/**
+ * 2. Email to Creator when Payout is successfully completed / disbursed
+ */
+export async function sendPayoutCompletedEmail(data: PayoutEmailData) {
+  const payoutRupees = (data.payoutAmountPaise / 100).toLocaleString("en-IN", {
+    minimumFractionDigits: (data.payoutAmountPaise / 100) % 1 !== 0 ? 2 : 0,
+    maximumFractionDigits: 2,
+  });
+
+  if (!resend) {
+    console.log("-----------------------------------------");
+    console.log(`[EMAIL DISPATCH SIMULATION (Resend not configured)]`);
+    console.log(`To Creator: ${data.creatorEmail}`);
+    console.log(`Subject: Payout Completed: ₹${payoutRupees} has been disbursed`);
+    console.log(`Reference: ${data.reference || "N/A"}`);
+    console.log("-----------------------------------------");
+    return;
+  }
+
+  try {
+    const res = await resend.emails.send({
+      from: fromEmail,
+      to: data.creatorEmail,
+      subject: `Payout Completed: ₹${payoutRupees} has been disbursed`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
+          <h2 style="color: #16a34a;">Your payout is complete!</h2>
+          <p>Hi ${data.creatorName},</p>
+          <p>Great news! Your payout of <strong>₹${payoutRupees}</strong> has been successfully disbursed to your account.</p>
+
+          <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 18px; margin: 20px 0;">
+            <p style="margin: 4px 0; font-size: 16px;"><strong>Amount Disbursed:</strong> <span style="color: #16a34a; font-weight: bold;">₹${payoutRupees}</span></p>
+            <p style="margin: 4px 0;"><strong>Method:</strong> ${data.payoutMethod.toUpperCase()}</p>
+            ${data.destinationSummary ? `<p style="margin: 4px 0;"><strong>Destination:</strong> ${data.destinationSummary}</p>` : ""}
+            ${data.reference ? `<p style="margin: 4px 0;"><strong>UTR / Reference ID:</strong> <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">${data.reference}</code></p>` : ""}
+            <p style="margin: 4px 0; color: #15803d; font-size: 13px;"><strong>Status:</strong> Completed & Settled</p>
+          </div>
+
+          <p style="font-size: 13px; color: #64748b;">The funds should now be reflected in your bank account or UPI balance. Thank you for hosting sessions on SessionBook!</p>
+          <p style="color: #64748b; font-size: 13px; margin-top: 30px;">Best regards,<br/>SessionBook Finance Team</p>
+        </div>
+      `,
+    });
+
+    if (res.error && res.error.message.includes("only send testing emails")) {
+      console.warn(`Resend Test limitation: Email not sent to ${data.creatorEmail} due to unverified domain sandbox.`);
+    }
+  } catch (err) {
+    console.error("Failed to send payout completed email via Resend:", err);
+  }
+}
+

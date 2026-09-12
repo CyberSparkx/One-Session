@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { PayoutStatus } from "@/lib/types";
+import { sendPayoutCompletedEmail } from "@/lib/email";
 
 export async function POST(
   req: Request,
@@ -26,6 +27,17 @@ export async function POST(
 
     const payment = await prisma.payment.findUnique({
       where: { id },
+      include: {
+        booking: {
+          include: {
+            creator: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!payment) {
@@ -38,6 +50,33 @@ export async function POST(
         payoutStatus: PayoutStatus.MANUALLY_PAID,
       },
     });
+
+    // Notify creator that their session payout is done
+    try {
+      const creatorUser = payment.booking?.creator?.user;
+      if (creatorUser) {
+        let payoutDetailsObj: any = null;
+        if (payment.booking.creator.payoutDetails) {
+          try {
+            payoutDetailsObj = JSON.parse(payment.booking.creator.payoutDetails);
+          } catch (e) {}
+        }
+        const method = payment.booking.creator.payoutMethod || "upi";
+        const dest = method === "upi" ? `UPI: ${payoutDetailsObj?.upiId || "Registered UPI"}` : `Bank A/C: •••${payoutDetailsObj?.bankAccount?.slice(-4) || "XXXX"}`;
+
+        await sendPayoutCompletedEmail({
+          creatorName: creatorUser.name,
+          creatorEmail: creatorUser.email,
+          payoutAmountPaise: payment.creatorPayoutPaise,
+          payoutMethod: method,
+          destinationSummary: dest,
+          reference: `PAYMENT_${payment.id.slice(-6)}`,
+          sessionsCount: 1,
+        });
+      }
+    } catch (emailErr) {
+      console.error("Payout completed email error in mark-paid:", emailErr);
+    }
 
     return NextResponse.json({
       message: "Payout marked as manually paid",

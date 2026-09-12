@@ -40,6 +40,7 @@ export default function AdminDashboardPage() {
   const [selectedCreatorForPayout, setSelectedCreatorForPayout] = useState<any | null>(null);
   const [payoutReference, setPayoutReference] = useState("");
   const [isProcessingPayout, setIsProcessingPayout] = useState(false);
+  const [isInitiatingEmail, setIsInitiatingEmail] = useState(false);
   const [payoutSuccessMsg, setPayoutSuccessMsg] = useState("");
   const [copiedUpi, setCopiedUpi] = useState(false);
 
@@ -57,7 +58,6 @@ export default function AdminDashboardPage() {
         fetch("/api/admin/transactions"),
         fetch("/api/admin/creators"),
       ]);
-
       if (statsRes.ok) setStats(await statsRes.json());
       if (txRes.ok) setTransactions(await txRes.json());
       if (creatorsRes.ok) setCreators(await creatorsRes.json());
@@ -65,6 +65,32 @@ export default function AdminDashboardPage() {
       console.error("Failed to load admin data:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleNotifyPayoutInitiated = async () => {
+    if (!selectedCreatorForPayout) return;
+    setIsInitiatingEmail(true);
+
+    try {
+      const res = await fetch(`/api/admin/creators/${selectedCreatorForPayout.id}/payout/initiate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          method: selectedCreatorForPayout.payoutMethod || "upi",
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert(`Notification email sent to ${selectedCreatorForPayout.name} (${selectedCreatorForPayout.email}) that payout has been initiated.`);
+      } else {
+        alert(data.error || "Failed to send payout initiation email");
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to trigger payout initiation email");
+    } finally {
+      setIsInitiatingEmail(false);
     }
   };
 
@@ -87,7 +113,7 @@ export default function AdminDashboardPage() {
 
       const data = await res.json();
       if (res.ok) {
-        setPayoutSuccessMsg(data.message || "Payout recorded successfully!");
+        setPayoutSuccessMsg(data.message || "Payout recorded successfully & confirmation email sent to creator!");
         setTimeout(() => {
           setSelectedCreatorForPayout(null);
           setPayoutReference("");
@@ -992,9 +1018,24 @@ export default function AdminDashboardPage() {
 
             {/* Form to Record Payout */}
             <form onSubmit={handleInitiateCreatorPayout} className="space-y-4">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50/70 border border-blue-200/80 text-xs">
+                <div>
+                  <p className="font-bold text-blue-900">Step 1: Notify Creator Payout Initiated</p>
+                  <p className="text-[11px] text-blue-700">Send an email alert to the creator that payout has been initiated.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleNotifyPayoutInitiated}
+                  disabled={isInitiatingEmail}
+                  className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] transition-colors shadow-xs cursor-pointer flex-shrink-0 disabled:opacity-50"
+                >
+                  {isInitiatingEmail ? "Sending..." : "Send Initiated Email"}
+                </button>
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
-                  Transfer Reference / UTR Number
+                  Step 2: Transfer Reference / UTR Number
                 </label>
                 <input
                   type="text"
@@ -1005,7 +1046,7 @@ export default function AdminDashboardPage() {
                   className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs font-mono focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
                 />
                 <p className="text-[11px] text-gray-400 mt-1">
-                  Funds sit in your platform account until you disburse. Enter reference to mark completed.
+                  Once transfer is complete, enter the reference to clear dues and send the "Payout Done" confirmation email.
                 </p>
               </div>
 
@@ -1033,7 +1074,7 @@ export default function AdminDashboardPage() {
                     ) : (
                       <>
                         <Send className="w-3.5 h-3.5" />
-                        <span>Confirm Paid & Clear Dues</span>
+                        <span>Confirm Paid & Send Done Email</span>
                       </>
                     )}
                   </button>

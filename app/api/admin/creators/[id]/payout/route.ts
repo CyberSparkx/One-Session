@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { PayoutStatus } from "@/lib/types";
+import { sendPayoutCompletedEmail } from "@/lib/email";
 
 export async function POST(
   req: Request,
@@ -159,6 +160,37 @@ export async function POST(
         });
       }
     });
+
+    let payoutDetailsObj: any = null;
+    if (creator.payoutDetails) {
+      try {
+        payoutDetailsObj = JSON.parse(creator.payoutDetails);
+      } catch (e) {}
+    }
+
+    let destinationSummary = "";
+    if (usedMethod === "upi") {
+      destinationSummary = `UPI: ${payoutDetailsObj?.upiId || "Registered UPI VPA"}`;
+    } else if (usedMethod === "bank") {
+      destinationSummary = `Bank A/C: •••${payoutDetailsObj?.bankAccount?.slice(-4) || "XXXX"} (${payoutDetailsObj?.ifsc || ""})`;
+    } else {
+      destinationSummary = usedMethod.toUpperCase();
+    }
+
+    // Send the "Payout Completed / Done" confirmation email to creator
+    try {
+      await sendPayoutCompletedEmail({
+        creatorName: creator.user.name,
+        creatorEmail: creator.user.email,
+        payoutAmountPaise: netPayoutPaise,
+        payoutMethod: usedMethod,
+        destinationSummary,
+        reference: payoutReference,
+        sessionsCount: eligiblePayments.length,
+      });
+    } catch (emailErr) {
+      console.error("Payout completed email notification error:", emailErr);
+    }
 
     return NextResponse.json({
       success: true,
