@@ -445,54 +445,74 @@ export default function InvoicesClientView({
               </div>
             </div>
 
-            {/* Item Table */}
-            <div className="rounded-xl border border-gray-200 bg-gray-50/70 p-4 space-y-3 text-xs">
-              <div className="flex items-center justify-between pb-2 border-b border-gray-200 text-gray-400 text-[11px] uppercase font-semibold">
-                <span>Description</span>
-                <span>Amount</span>
-              </div>
-              <div className="flex items-center justify-between text-gray-800">
-                <div>
-                  <p className="font-semibold text-gray-950">{selectedInvoice.sessionTitle}</p>
-                  <p className="text-[11px] text-gray-500">
-                    {format(parseISO(selectedInvoice.date), "PPP p")} ({selectedInvoice.durationMinutes} mins)
-                  </p>
+              {/* Item Table */}
+              <div className="rounded-xl border border-gray-200 bg-gray-50/70 p-4 space-y-3 text-xs">
+                <div className="flex items-center justify-between pb-2 border-b border-gray-200 text-gray-400 text-[11px] uppercase font-semibold">
+                  <span>Fee / Deductions Breakdown</span>
+                  <span>Amount</span>
                 </div>
-                <span className="font-bold text-gray-950">₹{selectedInvoice.grossRupees}</span>
-              </div>
-              <div className="pt-2 border-t border-gray-200 flex items-center justify-between text-gray-500 text-[11px]">
-                <div>
-                  <span className="font-medium text-gray-700">Platform Commission (4%)</span>
-                  <p className="text-[10px] text-gray-400">SessionBook service fee</p>
+                <div className="flex items-center justify-between text-gray-800">
+                  <div>
+                    <p className="font-semibold text-gray-950">{selectedInvoice.sessionTitle}</p>
+                    <p className="text-[11px] text-gray-500">
+                      {format(parseISO(selectedInvoice.date), "PPP p")} ({selectedInvoice.durationMinutes} mins)
+                    </p>
+                  </div>
+                  <span className="font-bold text-gray-950">₹{selectedInvoice.grossRupees}</span>
                 </div>
-                <span className="text-amber-600 font-semibold">-₹{selectedInvoice.platformFeeRupees}</span>
-              </div>
-              <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-gray-500 text-[11px]">
-                <div>
-                  <span className="font-medium text-gray-700">Razorpay Payment Processing (2%)</span>
-                  <p className="text-[10px] text-gray-400">Bank & payment network handling</p>
+
+                {/* Platform Fee 4% */}
+                <div className="pt-2 border-t border-gray-200 flex items-center justify-between text-gray-500 text-[11px]">
+                  <div>
+                    <span className="font-medium text-gray-700">1. Platform Commission (4%)</span>
+                    <p className="text-[10px] text-gray-400">4% calculated on gross amount</p>
+                  </div>
+                  <span className="text-orange-600 font-semibold">-₹{selectedInvoice.platformFeeRupees}</span>
                 </div>
-                <span className="text-gray-600 font-medium">
-                  ₹{selectedInvoice.gatewayFeeRupees || (parseFloat(selectedInvoice.grossRupees) * 0.02).toFixed(2)}
-                </span>
-              </div>
-              <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-gray-500 text-[11px]">
-                <div>
-                  <span className="font-medium text-gray-700">GST on Payment Gateway (18%)</span>
-                  <p className="text-[10px] text-gray-400">Government tax on processing expense</p>
+
+                {/* Razorpay 2% */}
+                <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-gray-500 text-[11px]">
+                  <div>
+                    <span className="font-medium text-gray-700">2. Razorpay Gateway Fee (2%)</span>
+                    <p className="text-[10px] text-gray-400">2% applied on full booking amount</p>
+                  </div>
+                  <span className="text-slate-600 font-medium">
+                    -₹{selectedInvoice.gatewayFeeRupees || (parseFloat(selectedInvoice.grossRupees) * 0.02).toFixed(2)}
+                  </span>
                 </div>
-                <span className="text-gray-600 font-medium">
-                  ₹{selectedInvoice.gatewayGstRupees || (parseFloat(selectedInvoice.grossRupees) * 0.02 * 0.18).toFixed(2)}
-                </span>
-              </div>
-              <div className="pt-2.5 border-t border-gray-200 flex items-center justify-between font-bold text-sm">
-                <div>
-                  <span className="text-gray-950">Net Creator Payout</span>
-                  <p className="text-[10px] font-normal text-emerald-600">Disbursed to your registered bank / UPI</p>
+
+                {/* GST on processing */}
+                <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-gray-500 text-[11px]">
+                  <div>
+                    <span className="font-medium text-gray-700">3. GST on Gateway Fee (18%)</span>
+                    <p className="text-[10px] text-gray-400">Government tax on 2% gateway expense</p>
+                  </div>
+                  <span className="text-slate-600 font-medium">
+                    -₹{selectedInvoice.gatewayGstRupees || (parseFloat(selectedInvoice.grossRupees) * 0.02 * 0.18).toFixed(2)}
+                  </span>
                 </div>
-                <span className="text-emerald-600 text-base">₹{selectedInvoice.netPayoutRupees}</span>
+
+                {/* Total Deductions Callout */}
+                <div className="p-2 rounded-lg bg-slate-100/80 border border-slate-200 flex items-center justify-between text-[11px]">
+                  <span className="font-semibold text-slate-700">Total Deductions (Platform 4% + Gateway/Tax ~2%):</span>
+                  <span className="font-bold text-red-600">
+                    -₹{(
+                      parseFloat(selectedInvoice.platformFeeRupees) +
+                      parseFloat(selectedInvoice.gatewayFeeRupees || (parseFloat(selectedInvoice.grossRupees) * 0.02).toFixed(2)) +
+                      parseFloat(selectedInvoice.gatewayGstRupees || (parseFloat(selectedInvoice.grossRupees) * 0.02 * 0.18).toFixed(2))
+                    ).toFixed(2)}
+                  </span>
+                </div>
+
+                {/* Net Creator Payout */}
+                <div className="pt-2.5 border-t border-gray-200 flex items-center justify-between font-bold text-sm">
+                  <div>
+                    <span className="text-gray-950">Net Creator Payout</span>
+                    <p className="text-[10px] font-normal text-emerald-600">Disbursed to your registered bank / UPI</p>
+                  </div>
+                  <span className="text-emerald-600 text-base">₹{selectedInvoice.netPayoutRupees}</span>
+                </div>
               </div>
-            </div>
 
             {/* Payment Meta */}
             <div className="p-3 rounded-xl bg-gray-50 border border-gray-200 text-[11px] text-gray-500 space-y-1">

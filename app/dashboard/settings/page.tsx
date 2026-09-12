@@ -269,21 +269,38 @@ export default function SettingsPage() {
         {/* Section 3: Payout Details */}
         <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-xs space-y-5">
           {/* Platform Fee & Tax Transparency Notice */}
-          <div className="p-4 rounded-2xl bg-orange-50/70 border border-orange-200/80 text-xs text-orange-950 space-y-1.5">
+          <div className="p-4 rounded-2xl bg-orange-50/70 border border-orange-200/80 text-xs text-orange-950 space-y-2">
             <div className="flex items-center gap-2 font-bold text-orange-900">
               <span className="w-2 h-2 rounded-full bg-orange-600 animate-pulse" />
-              <span>Platform Economics & Fee Transparency</span>
+              <span>Transparent Fee Breakdown (4% Platform + 2% Gateway = ~6% Total Deductions)</span>
             </div>
-            <p className="text-gray-600 leading-relaxed">
-              For every confirmed session, <strong className="text-gray-950 font-bold">4%</strong> is retained as the SessionBook platform fee. Payment gateway processing (Razorpay ~2%) and applicable government taxes (GST 18% on gateway expense) are applied on customer transactions. You receive <strong className="text-emerald-700 font-bold">96% net payout</strong> directly to your account.
+            <p className="text-gray-700 leading-relaxed">
+              Every booking fee is calculated directly on the total gross booking amount:
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 font-mono text-[11px]">
+              <div className="p-2 rounded-xl bg-white border border-orange-200/80">
+                <span className="text-orange-700 font-bold block">1. Platform Commission</span>
+                <span className="text-gray-600">4% of gross price</span>
+              </div>
+              <div className="p-2 rounded-xl bg-white border border-orange-200/80">
+                <span className="text-slate-700 font-bold block">2. Razorpay Gateway & Tax</span>
+                <span className="text-gray-600">2% + 18% GST (~2.36%)</span>
+              </div>
+              <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900">
+                <span className="font-bold block">3. Creator Net Payout</span>
+                <span>Remaining (~94%)</span>
+              </div>
+            </div>
+            <p className="text-[11px] text-gray-500 pt-1">
+              <em>Example: On a ₹3,000 booking, the platform fee is ₹120 (4%), gateway processing & tax is ~₹60 (2%), and you receive ₹2,820 (94%) net.</em>
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
             <div>
-              <h2 className="text-base font-bold text-gray-950">Payout Method (96% Creator Share)</h2>
+              <h2 className="text-base font-bold text-gray-950">Payout Method (Direct Bank / UPI Transfer)</h2>
               <p className="text-xs text-gray-500 mt-0.5">
-                The platform retains a 4% commission per booking. You receive 96% directly via your chosen method.
+                Session earnings are held safely until session completion, then disbursed to your registered destination.
               </p>
             </div>
             <div className="flex items-center gap-1.5">

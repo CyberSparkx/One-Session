@@ -195,42 +195,75 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* ── Platform Fee & Razorpay Tax Terms Banner ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white p-6 sm:p-7 shadow-xl border border-slate-800">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white p-6 sm:p-7 shadow-xl border border-slate-800 space-y-5">
         {/* Glow ambient decoration */}
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-orange-500/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/3 -mb-12 w-48 h-48 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-3xl">
+          <div className="space-y-2 max-w-2xl">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold tracking-wider uppercase bg-orange-500 text-white">
-                Revenue & Expense Terms
+                Platform Economics & Split Breakdown
               </span>
               <span className="text-xs font-semibold text-slate-400">
-                Transparent Fee Structure Applied Across Platform
+                Transparent Fee Structure Applied On Every Booking
               </span>
             </div>
             <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">
-              4% Platform Commission + Payment Gateway & Government Tax Breakdown
+              Platform Fee (4%) + Payment Gateway & Tax (~2%) = Total ~6% Deductions
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              When a client pays for a booking: <strong className="text-orange-400 font-semibold">4% is retained by SessionBook</strong> as our platform commission. Payment network expenses (<strong className="text-white font-medium">Razorpay 2% processing + 18% GST tax</strong> on gateway fee) are applied on transaction processing. The remaining <strong className="text-emerald-400 font-bold">96% net payout</strong> is held safely in reserve and disbursed to the creator once the session concludes.
+              Every booking is calculated on the <strong className="text-white font-semibold">100% Gross Amount</strong>:
+              Razorpay charges <strong className="text-slate-200 font-semibold">2% payment gateway fee</strong> on the total amount plus applicable GST on that processing fee. The platform charges <strong className="text-orange-400 font-bold">4% platform commission</strong> from the gross booking amount. The entire remaining amount (<strong className="text-emerald-400 font-bold">94% net</strong>) is credited directly to the creator.
             </p>
           </div>
 
           {/* Key economic ratios */}
           <div className="grid grid-cols-3 gap-3 bg-white/5 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 flex-shrink-0 text-center">
-            <div className="px-2">
+            <div className="px-3">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Platform</span>
               <span className="text-xl font-black text-orange-400">4%</span>
+              <span className="text-[10px] text-slate-400 block mt-0.5">Platform Fee</span>
             </div>
-            <div className="px-2 border-x border-white/10">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Gateway</span>
+            <div className="px-3 border-x border-white/10">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Razorpay</span>
               <span className="text-xl font-black text-slate-200">2% + Tax</span>
+              <span className="text-[10px] text-slate-400 block mt-0.5">Gateway & GST</span>
             </div>
-            <div className="px-2">
+            <div className="px-3">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Creator</span>
-              <span className="text-xl font-black text-emerald-400">96%</span>
+              <span className="text-xl font-black text-emerald-400">94%</span>
+              <span className="text-[10px] text-emerald-400/80 block mt-0.5">Net Payout</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Live Example Calculation Box: e.g. ₹3,000 Booking */}
+        <div className="relative z-10 p-4 rounded-2xl bg-white/[0.04] border border-white/10 text-xs">
+          <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/10">
+            <span className="font-bold text-slate-300 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              Example Breakdown for a ₹3,000 Booking:
+            </span>
+            <span className="text-[11px] font-mono text-slate-400">Total Deductions: 4% + 2% = 6%</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+            <div className="p-2.5 rounded-xl bg-white/5">
+              <span className="text-[10px] text-slate-400 block uppercase">1. Gross Booking (100%)</span>
+              <span className="text-sm font-bold text-white">₹3,000</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/20">
+              <span className="text-[10px] text-orange-400 block uppercase">2. Platform Fee (4%)</span>
+              <span className="text-sm font-bold text-orange-400">-₹120</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-slate-500/10 border border-slate-500/20">
+              <span className="text-[10px] text-slate-300 block uppercase">3. Razorpay & Tax (~2%)</span>
+              <span className="text-sm font-bold text-slate-200">-₹60</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30">
+              <span className="text-[10px] text-emerald-300 block uppercase font-bold">4. Creator Net Payout (94%)</span>
+              <span className="text-sm font-black text-emerald-400">₹2,820</span>
             </div>
           </div>
         </div>
@@ -807,34 +840,51 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Transparent Fee & Tax Breakdown */}
-            <div className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200 text-xs space-y-2">
-              <div className="flex items-center justify-between text-slate-500 font-medium">
-                <span>Gross Volume (100%):</span>
-                <span className="font-semibold text-slate-800">
+            <div className="p-3.5 rounded-2xl bg-slate-50/90 border border-slate-200 text-xs space-y-2">
+              <div className="flex items-center justify-between font-bold text-slate-900 pb-1 border-b border-slate-200/80">
+                <span>Fee & Deductions Breakdown</span>
+                <span className="text-[10px] font-mono text-slate-500 uppercase">Gross Based</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-600 font-medium">
+                <span>1. Gross Volume (100%):</span>
+                <span className="font-semibold text-slate-900">
                   ₹{((selectedCreatorForPayout.netPendingPayoutPaise / 0.96) / 100).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-slate-500 font-medium">
+              <div className="flex items-center justify-between text-slate-600 font-medium">
                 <span className="flex items-center gap-1">
-                  Platform Commission (4%):
-                  <span className="text-[10px] bg-orange-100 text-orange-700 font-bold px-1.5 py-0.2 rounded">Kept by Platform</span>
+                  2. Platform Commission (4%):
+                  <span className="text-[10px] bg-orange-100 text-orange-700 font-bold px-1.5 py-0.2 rounded">SessionBook Cut</span>
                 </span>
                 <span className="font-semibold text-orange-600">
-                  ₹{(((selectedCreatorForPayout.netPendingPayoutPaise / 0.96) * 0.04) / 100).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+                  -₹{(((selectedCreatorForPayout.netPendingPayoutPaise / 0.96) * 0.04) / 100).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-slate-500 font-medium border-t border-slate-200/60 pt-1.5">
+              <div className="flex items-center justify-between text-slate-600 font-medium">
                 <span className="flex items-center gap-1">
-                  Payment Gateway (~2% + 18% GST):
-                  <span className="text-[10px] bg-slate-200 text-slate-600 font-medium px-1 rounded">Razorpay & Gov Taxes</span>
+                  3. Razorpay Fee (2%) + 18% GST:
+                  <span className="text-[10px] bg-slate-200 text-slate-700 font-medium px-1 rounded">Gateway & Tax</span>
                 </span>
-                <span className="text-[11px] text-slate-500 font-mono">
-                  Settled on transaction
+                <span className="font-semibold text-slate-600">
+                  -₹{(((selectedCreatorForPayout.netPendingPayoutPaise / 0.96) * 0.02 * 1.18) / 100).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
                 </span>
               </div>
-              <div className="flex items-center justify-between font-bold text-emerald-700 border-t border-slate-200 pt-1.5 text-sm">
-                <span>Creator Net Payout (96%):</span>
-                <span>₹{(selectedCreatorForPayout.netPendingPayoutPaise / 100).toLocaleString("en-IN")}</span>
+
+              {/* Total deductions badge */}
+              <div className="p-2 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-between text-[11px] font-semibold text-slate-700">
+                <span>Total Deductions (~6%):</span>
+                <span className="text-red-600 font-bold">
+                  -₹{(((selectedCreatorForPayout.netPendingPayoutPaise / 0.96) * (0.04 + 0.02 * 1.18)) / 100).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+                </span>
+              </div>
+
+              {/* Net Disbursed */}
+              <div className="flex items-center justify-between font-bold text-emerald-700 border-t border-slate-200 pt-2 text-sm">
+                <div>
+                  <span>Creator Net Payout</span>
+                  <p className="text-[10px] font-normal text-emerald-600">Disbursed to Creator Account</p>
+                </div>
+                <span className="text-base font-black">₹{(selectedCreatorForPayout.netPendingPayoutPaise / 100).toLocaleString("en-IN")}</span>
               </div>
             </div>
 
