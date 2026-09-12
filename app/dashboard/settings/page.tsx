@@ -268,6 +268,17 @@ export default function SettingsPage() {
 
         {/* Section 3: Payout Details */}
         <div className="p-6 rounded-2xl bg-white border border-gray-200 shadow-xs space-y-5">
+          {/* Platform Fee & Tax Transparency Notice */}
+          <div className="p-4 rounded-2xl bg-orange-50/70 border border-orange-200/80 text-xs text-orange-950 space-y-1.5">
+            <div className="flex items-center gap-2 font-bold text-orange-900">
+              <span className="w-2 h-2 rounded-full bg-orange-600 animate-pulse" />
+              <span>Platform Economics & Fee Transparency</span>
+            </div>
+            <p className="text-gray-600 leading-relaxed">
+              For every confirmed session, <strong className="text-gray-950 font-bold">4%</strong> is retained as the SessionBook platform fee. Payment gateway processing (Razorpay ~2%) and applicable government taxes (GST 18% on gateway expense) are applied on customer transactions. You receive <strong className="text-emerald-700 font-bold">96% net payout</strong> directly to your account.
+            </p>
+          </div>
+
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
             <div>
               <h2 className="text-base font-bold text-gray-950">Payout Method (96% Creator Share)</h2>

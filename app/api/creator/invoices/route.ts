@@ -58,8 +58,18 @@ export async function GET(req: Request) {
 
     const items = bookings.map((b) => {
       const grossPaise = b.payment?.amountTotalPaise || b.sessionType.priceInPaise;
-      const feePaise = b.payment?.platformFeePaise || Math.round(grossPaise * 0.04);
-      const netPaise = b.payment?.creatorPayoutPaise || (grossPaise - feePaise);
+      const platformFeePaise = b.payment?.platformFeePaise || Math.round(grossPaise * 0.04);
+      
+      // Detailed breakdown:
+      // Razorpay payment gateway standard fee: 2%
+      const gatewayFeePaise = Math.round(grossPaise * 0.02);
+      // GST / Tax on gateway fee (18% of gateway fee):
+      const gatewayGstPaise = Math.round(gatewayFeePaise * 0.18);
+      // Total Gateway + Tax deduction:
+      const totalTaxAndGatewayPaise = gatewayFeePaise + gatewayGstPaise;
+
+      // Net creator payout is recorded in database
+      const netPaise = b.payment?.creatorPayoutPaise || (grossPaise - platformFeePaise);
 
       return {
         id: b.id,
@@ -72,13 +82,20 @@ export async function GET(req: Request) {
         durationMinutes: b.sessionType.durationMinutes,
         status: b.status,
         paymentStatus: b.payment?.status || (b.status === "CONFIRMED" ? "CAPTURED" : "PENDING"),
+        payoutStatus: b.payment?.payoutStatus || "NOT_PAID_OUT",
         paymentId: b.payment?.razorpayPaymentId || "N/A",
         orderId: b.payment?.razorpayOrderId || "N/A",
         grossAmountPaise: grossPaise,
-        platformFeePaise: feePaise,
+        platformFeePaise,
+        gatewayFeePaise,
+        gatewayGstPaise,
+        totalTaxAndGatewayPaise,
         netPayoutPaise: netPaise,
         grossRupees: (grossPaise / 100).toFixed(2),
-        platformFeeRupees: (feePaise / 100).toFixed(2),
+        platformFeeRupees: (platformFeePaise / 100).toFixed(2),
+        gatewayFeeRupees: (gatewayFeePaise / 100).toFixed(2),
+        gatewayGstRupees: (gatewayGstPaise / 100).toFixed(2),
+        totalTaxAndGatewayRupees: (totalTaxAndGatewayPaise / 100).toFixed(2),
         netPayoutRupees: (netPaise / 100).toFixed(2),
       };
     });
@@ -88,22 +105,24 @@ export async function GET(req: Request) {
     const totalSessions = items.length;
     const totalGrossPaise = activeItems.reduce((sum, i) => sum + i.grossAmountPaise, 0);
     const totalPlatformFeePaise = activeItems.reduce((sum, i) => sum + i.platformFeePaise, 0);
+    const totalTaxAndGatewayPaise = activeItems.reduce((sum, i) => sum + i.totalTaxAndGatewayPaise, 0);
     const totalNetPayoutPaise = activeItems.reduce((sum, i) => sum + i.netPayoutPaise, 0);
 
-    // If CSV download requested, generate CSV format
+    // If CSV download requested, generate CSV format with complete breakdown
     if (exportCsv) {
       const csvHeader = [
         "Invoice Number",
         "Date",
         "Client Name",
         "Client Email",
-        "Client Phone",
         "Session Title",
         "Duration (Mins)",
         "Gross Amount (INR)",
         "Platform Fee 4% (INR)",
-        "Creator Net Payout 96% (INR)",
-        "Booking Status",
+        "Razorpay Processing Fee (2% INR)",
+        "GST on Processing (18% INR)",
+        "Creator Net Payout (INR)",
+        "Payout Status",
         "Payment ID",
       ].join(",");
 
@@ -113,13 +132,14 @@ export async function GET(req: Request) {
           `"${format(new Date(i.date), "yyyy-MM-dd HH:mm")}"`,
           `"${i.clientName.replace(/"/g, '""')}"`,
           `"${i.clientEmail}"`,
-          `"${i.clientPhone}"`,
           `"${i.sessionTitle.replace(/"/g, '""')}"`,
           i.durationMinutes,
           i.grossRupees,
           i.platformFeeRupees,
+          i.gatewayFeeRupees,
+          i.gatewayGstRupees,
           i.netPayoutRupees,
-          `"${i.status}"`,
+          `"${i.payoutStatus}"`,
           `"${i.paymentId}"`,
         ].join(",")
       );
@@ -127,7 +147,7 @@ export async function GET(req: Request) {
       // Add summary row at bottom
       csvRows.push("");
       csvRows.push(
-        `"TOTALS (Active)","","","","","",${totalSessions},${(totalGrossPaise / 100).toFixed(2)},${(totalPlatformFeePaise / 100).toFixed(2)},${(totalNetPayoutPaise / 100).toFixed(2)},"",""`
+        `"TOTALS (Active)","","","","",${totalSessions},${(totalGrossPaise / 100).toFixed(2)},${(totalPlatformFeePaise / 100).toFixed(2)},${(totalTaxAndGatewayPaise / 100).toFixed(2)},"",${(totalNetPayoutPaise / 100).toFixed(2)},"",""`
       );
 
       const csvContent = [csvHeader, ...csvRows].join("\n");
@@ -149,6 +169,7 @@ export async function GET(req: Request) {
       totalSessions,
       totalGrossPaise,
       totalPlatformFeePaise,
+      totalTaxAndGatewayPaise,
       totalNetPayoutPaise,
       items,
     });

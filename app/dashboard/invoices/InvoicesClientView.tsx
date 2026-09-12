@@ -32,9 +32,15 @@ interface InvoiceItem {
   orderId: string;
   grossAmountPaise: number;
   platformFeePaise: number;
+  gatewayFeePaise?: number;
+  gatewayGstPaise?: number;
+  totalTaxAndGatewayPaise?: number;
   netPayoutPaise: number;
   grossRupees: string;
   platformFeeRupees: string;
+  gatewayFeeRupees?: string;
+  gatewayGstRupees?: string;
+  totalTaxAndGatewayRupees?: string;
   netPayoutRupees: string;
 }
 
@@ -455,12 +461,36 @@ export default function InvoicesClientView({
                 <span className="font-bold text-gray-950">₹{selectedInvoice.grossRupees}</span>
               </div>
               <div className="pt-2 border-t border-gray-200 flex items-center justify-between text-gray-500 text-[11px]">
-                <span>Platform Commission (4%)</span>
-                <span className="text-amber-600 font-medium">-₹{selectedInvoice.platformFeeRupees}</span>
+                <div>
+                  <span className="font-medium text-gray-700">Platform Commission (4%)</span>
+                  <p className="text-[10px] text-gray-400">SessionBook service fee</p>
+                </div>
+                <span className="text-amber-600 font-semibold">-₹{selectedInvoice.platformFeeRupees}</span>
               </div>
-              <div className="pt-2 border-t border-gray-200 flex items-center justify-between font-bold text-sm">
-                <span className="text-gray-900">Net Creator Payout</span>
-                <span className="text-emerald-600">₹{selectedInvoice.netPayoutRupees}</span>
+              <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-gray-500 text-[11px]">
+                <div>
+                  <span className="font-medium text-gray-700">Razorpay Payment Processing (2%)</span>
+                  <p className="text-[10px] text-gray-400">Bank & payment network handling</p>
+                </div>
+                <span className="text-gray-600 font-medium">
+                  ₹{selectedInvoice.gatewayFeeRupees || (parseFloat(selectedInvoice.grossRupees) * 0.02).toFixed(2)}
+                </span>
+              </div>
+              <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-gray-500 text-[11px]">
+                <div>
+                  <span className="font-medium text-gray-700">GST on Payment Gateway (18%)</span>
+                  <p className="text-[10px] text-gray-400">Government tax on processing expense</p>
+                </div>
+                <span className="text-gray-600 font-medium">
+                  ₹{selectedInvoice.gatewayGstRupees || (parseFloat(selectedInvoice.grossRupees) * 0.02 * 0.18).toFixed(2)}
+                </span>
+              </div>
+              <div className="pt-2.5 border-t border-gray-200 flex items-center justify-between font-bold text-sm">
+                <div>
+                  <span className="text-gray-950">Net Creator Payout</span>
+                  <p className="text-[10px] font-normal text-emerald-600">Disbursed to your registered bank / UPI</p>
+                </div>
+                <span className="text-emerald-600 text-base">₹{selectedInvoice.netPayoutRupees}</span>
               </div>
             </div>
 
