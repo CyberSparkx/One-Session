@@ -160,8 +160,8 @@ export const authOptions: NextAuthOptions = {
         token.slug = (user as any).slug;
       }
 
-      // If token doesn't have slug yet (e.g. initial Google OAuth callback)
-      if (!token.slug && token.email) {
+      // Re-sync role and profile info from database
+      if (token.email) {
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email },
           include: { creatorProfile: true },
