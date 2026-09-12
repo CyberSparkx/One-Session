@@ -67,10 +67,12 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: "Already processed" }, { status: 200 });
       }
 
-      // Compute 4% platform commission and 96% creator payout
+      // Compute 4% platform commission, 2% gateway fee, 18% GST on gateway fee, and creator net payout
       const amountPaise = paymentRecord.amountTotalPaise;
       const platformFeePaise = Math.round(amountPaise * 0.04);
-      const creatorPayoutPaise = amountPaise - platformFeePaise;
+      const gatewayFeePaise = Math.round(amountPaise * 0.02);
+      const gatewayGstPaise = Math.round(gatewayFeePaise * 0.18);
+      const creatorPayoutPaise = amountPaise - platformFeePaise - (gatewayFeePaise + gatewayGstPaise);
 
       // Update payment and booking statuses in a transaction
       await prisma.$transaction(async (tx) => {

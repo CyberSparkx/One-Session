@@ -295,10 +295,13 @@ export default function InvoicesClientView({
 
         <div className="p-5 rounded-2xl bg-white border border-gray-200 shadow-xs">
           <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-            Net Creator Payout (96%)
+            Net Creator Payout
           </span>
           <div className="text-2xl font-extrabold text-emerald-600 mt-1">
-            ₹{(totals.netPaise / 100).toLocaleString("en-IN")}
+            ₹{(totals.netPaise / 100).toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </div>
           <p className="text-[11px] text-gray-400 mt-0.5">Your net earnings</p>
         </div>
@@ -338,7 +341,7 @@ export default function InvoicesClientView({
                   <th className="py-3 px-4">Session</th>
                   <th className="py-3 px-4 text-right">Gross (₹)</th>
                   <th className="py-3 px-4 text-right">Platform (4%)</th>
-                  <th className="py-3 px-4 text-right">Net (96%)</th>
+                  <th className="py-3 px-4 text-right">Net Payout</th>
                   <th className="py-3 px-4 text-center">Status</th>
                   <th className="py-3 px-4 text-right print:hidden">Action</th>
                 </tr>

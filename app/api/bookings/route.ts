@@ -98,9 +98,11 @@ export async function POST(req: Request) {
       },
     });
 
-    // 3. Platform 4% fee and creator 96% payout calculation
+    // 3. Platform 4% fee, 2% gateway fee, 18% GST on gateway fee, and creator net payout
     const platformFeePaise = Math.round(priceInPaise * 0.04);
-    const creatorPayoutPaise = priceInPaise - platformFeePaise;
+    const gatewayFeePaise = Math.round(priceInPaise * 0.02);
+    const gatewayGstPaise = Math.round(gatewayFeePaise * 0.18);
+    const creatorPayoutPaise = priceInPaise - platformFeePaise - (gatewayFeePaise + gatewayGstPaise);
 
     // 4. Create Razorpay order if Razorpay is configured
     const razorpay = getRazorpayClient();

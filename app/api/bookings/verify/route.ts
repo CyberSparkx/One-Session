@@ -50,10 +50,12 @@ export async function POST(req: Request) {
       }
     }
 
-    // Recompute 4% platform fee and 96% creator payout
+    // Recompute 4% platform fee, 2% gateway fee, 18% GST on gateway, and creator payout
     const priceInPaise = booking.sessionType.priceInPaise;
     const platformFeePaise = Math.round(priceInPaise * 0.04);
-    const creatorPayoutPaise = priceInPaise - platformFeePaise;
+    const gatewayFeePaise = Math.round(priceInPaise * 0.02);
+    const gatewayGstPaise = Math.round(gatewayFeePaise * 0.18);
+    const creatorPayoutPaise = priceInPaise - platformFeePaise - (gatewayFeePaise + gatewayGstPaise);
 
     // Flip booking to CONFIRMED and payment to CAPTURED
     await prisma.$transaction(async (tx) => {

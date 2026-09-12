@@ -52,16 +52,24 @@ export default async function DashboardPage() {
     (b) => new Date(b.scheduledEnd) < now
   );
 
+  const calculateNetCreatorPayout = (pricePaise: number, existingPayout?: number | null) => {
+    if (existingPayout != null && existingPayout > 0) return existingPayout;
+    const platform = Math.round(pricePaise * 0.04);
+    const gateway = Math.round(pricePaise * 0.02);
+    const gst = Math.round(gateway * 0.18);
+    return pricePaise - platform - (gateway + gst);
+  };
+
   const totalEarningsPaise = confirmedBookings.reduce((sum, b) => {
     if (b.payment && (b.payment.status === "CAPTURED" || b.status === "CONFIRMED")) {
-      return sum + (b.payment.creatorPayoutPaise || Math.round(b.sessionType.priceInPaise * 0.96));
+      return sum + calculateNetCreatorPayout(b.sessionType.priceInPaise, b.payment.creatorPayoutPaise);
     }
     return sum;
   }, 0);
 
   const rawPendingPayoutPaise = confirmedBookings.reduce((sum, b) => {
     if (b.payment && b.payment.status === "CAPTURED" && b.payment.payoutStatus === "NOT_PAID_OUT") {
-      return sum + b.payment.creatorPayoutPaise;
+      return sum + calculateNetCreatorPayout(b.sessionType.priceInPaise, b.payment.creatorPayoutPaise);
     }
     return sum;
   }, 0);
@@ -69,14 +77,20 @@ export default async function DashboardPage() {
   const balanceAdjustmentPaise = profile.balanceAdjustmentPaise || 0;
   const netPendingPayoutPaise = Math.max(0, rawPendingPayoutPaise + balanceAdjustmentPaise);
 
-  const totalEarningsInRupees = (totalEarningsPaise / 100).toLocaleString("en-IN");
-  const pendingPayoutInRupees = (netPendingPayoutPaise / 100).toLocaleString("en-IN");
+  const totalEarningsInRupees = (totalEarningsPaise / 100).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  const pendingPayoutInRupees = (netPendingPayoutPaise / 100).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
   const METRICS = [
     {
       label: "Total Net Earnings",
       value: `₹${totalEarningsInRupees}`,
-      sub: "After 4% platform fee",
+      sub: "After platform (4%) & gateway fees",
       icon: IndianRupee,
       iconBg: "bg-emerald-50 text-emerald-600 border-emerald-200",
     },

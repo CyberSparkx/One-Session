@@ -72,12 +72,20 @@ export async function GET() {
         return bookingDate >= currentMonthStart && bookingDate <= currentMonthEnd;
       });
 
+      const calculateNetCreatorPayout = (pricePaise: number, existingPayout?: number | null) => {
+        if (existingPayout != null && existingPayout > 0) return existingPayout;
+        const platform = Math.round(pricePaise * 0.04);
+        const gateway = Math.round(pricePaise * 0.02);
+        const gst = Math.round(gateway * 0.18);
+        return pricePaise - platform - (gateway + gst);
+      };
+
       const thisMonthGrossPaise = thisMonthConfirmedBookings.reduce((sum, b) => {
         return sum + (b.payment?.amountTotalPaise || b.sessionType.priceInPaise || 0);
       }, 0);
 
       const thisMonthCreatorPayoutPaise = thisMonthConfirmedBookings.reduce((sum, b) => {
-        return sum + (b.payment?.creatorPayoutPaise || Math.round((b.sessionType.priceInPaise || 0) * 0.96));
+        return sum + (b.payment?.creatorPayoutPaise || calculateNetCreatorPayout(b.sessionType.priceInPaise));
       }, 0);
 
       // Lifecycle segmentation:
@@ -86,7 +94,7 @@ export async function GET() {
         (b) => b.status !== "COMPLETED" && new Date(b.scheduledEnd) > now
       );
       const inFlightReservePaise = upcomingSessions.reduce((sum, b) => {
-        return sum + (b.payment?.creatorPayoutPaise || Math.round((b.sessionType.priceInPaise || 0) * 0.96));
+        return sum + (b.payment?.creatorPayoutPaise || calculateNetCreatorPayout(b.sessionType.priceInPaise));
       }, 0);
 
       // Completed sessions: session is marked COMPLETED or scheduledEnd has passed
@@ -99,7 +107,7 @@ export async function GET() {
         (b) => b.payment && b.payment.status === "CAPTURED" && b.payment.payoutStatus === "NOT_PAID_OUT"
       );
       const rawPendingPayoutPaise = pendingEligiblePayments.reduce((sum, b) => {
-        return sum + (b.payment?.creatorPayoutPaise || 0);
+        return sum + (b.payment?.creatorPayoutPaise || calculateNetCreatorPayout(b.sessionType.priceInPaise));
       }, 0);
 
       // Total already paid out
@@ -116,7 +124,7 @@ export async function GET() {
       }, 0);
 
       const lifetimeCreatorEarningsPaise = confirmedOrCompletedBookings.reduce((sum, b) => {
-        return sum + (b.payment?.creatorPayoutPaise || Math.round((b.sessionType.priceInPaise || 0) * 0.96));
+        return sum + (b.payment?.creatorPayoutPaise || calculateNetCreatorPayout(b.sessionType.priceInPaise));
       }, 0);
 
       const balanceAdjustmentPaise = c.balanceAdjustmentPaise || 0;
