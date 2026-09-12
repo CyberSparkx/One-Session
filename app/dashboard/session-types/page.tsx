@@ -97,7 +97,7 @@ export default function SessionTypesPage() {
       title: form.title,
       description: form.description,
       durationMinutes: Number(form.durationMinutes),
-      priceInRupees: Number(form.priceInRupees),
+      priceInPaise: Math.round(Number(form.priceInRupees) * 100),
       bufferBeforeMin: Number(form.bufferBeforeMin),
       bufferAfterMin: Number(form.bufferAfterMin),
       isActive: form.isActive,
@@ -107,7 +107,7 @@ export default function SessionTypesPage() {
       const url = editingId
         ? `/api/creator/session-types/${editingId}`
         : "/api/creator/session-types";
-      const method = editingId ? "PATCH" : "POST";
+      const method = editingId ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method,
