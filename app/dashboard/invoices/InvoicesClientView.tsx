@@ -70,6 +70,9 @@ export default function InvoicesClientView({
     sessions: 0,
     grossPaise: 0,
     feePaise: 0,
+    gatewayFeePaise: 0,
+    gatewayGstPaise: 0,
+    taxAndGatewayPaise: 0,
     netPaise: 0,
   });
 
@@ -89,6 +92,9 @@ export default function InvoicesClientView({
           sessions: data.totalSessions || 0,
           grossPaise: data.totalGrossPaise || 0,
           feePaise: data.totalPlatformFeePaise || 0,
+          gatewayFeePaise: data.totalGatewayFeePaise || 0,
+          gatewayGstPaise: data.totalGatewayGstPaise || 0,
+          taxAndGatewayPaise: data.totalTaxAndGatewayPaise || 0,
           netPaise: data.totalNetPayoutPaise || 0,
         });
       }
@@ -176,15 +182,173 @@ export default function InvoicesClientView({
         </div>
       </div>
 
-      {/* Printable Report Header (only visible when printing) */}
-      <div className="hidden print:block border-b pb-4 mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">SessionBook — Creator Financial Statement</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Creator: <strong>{creatorName}</strong> ({creatorEmail})
-        </p>
-        <p className="text-xs text-gray-500">
-          Statement Period: {fromDate || "Earliest"} to {toDate || "Present"} • Generated on {format(new Date(), "PPpp")}
-        </p>
+      {/* ── Standard Printable Financial Statement (Visible ONLY during print) ── */}
+      <div className="hidden print:block text-black font-sans text-xs">
+        {/* Statement Header */}
+        <div className="flex justify-between items-start border-b-2 border-black pb-4 mb-5">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-black uppercase">
+              Financial Statement & Payout Summary
+            </h1>
+            <p className="text-xs text-gray-700 font-medium mt-0.5">SessionBook Platform</p>
+          </div>
+          <div className="text-right text-[11px] leading-tight text-gray-700">
+            <p className="font-semibold text-black">
+              Period: {fromDate || "Start"} to {toDate || "Present"}
+            </p>
+            <p className="mt-0.5">Generated: {format(new Date(), "dd MMM yyyy, hh:mm a")}</p>
+          </div>
+        </div>
+
+        {/* Creator & Accounting Meta */}
+        <div className="grid grid-cols-2 gap-6 p-3.5 bg-gray-50 border border-gray-300 rounded mb-5 text-[11px]">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Creator Account</p>
+            <p className="text-xs font-bold text-black mt-0.5">{creatorName}</p>
+            <p className="text-gray-700">{creatorEmail}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Settlement Currency</p>
+            <p className="text-xs font-bold text-black mt-0.5">INR (₹)</p>
+            <p className="text-gray-600">Standard Payout Terms: T+2 business days</p>
+          </div>
+        </div>
+
+        {/* Financial Breakdown Table (Standard Clean Invoice Design) */}
+        <div className="mb-6">
+          <table className="w-full border-collapse border border-gray-400 text-xs">
+            <thead>
+              <tr className="bg-gray-100 text-black border-b border-gray-400 font-semibold text-[11px]">
+                <th className="border-r border-gray-400 p-2 text-left">Description</th>
+                <th className="border-r border-gray-400 p-2 text-center w-28">Rate / Basis</th>
+                <th className="p-2 text-right w-36">Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-300 text-[11px]">
+              <tr>
+                <td className="border-r border-gray-300 p-2 font-medium">
+                  Total Gross Client Bookings ({totals.sessions} session{totals.sessions === 1 ? "" : "s"})
+                </td>
+                <td className="border-r border-gray-300 p-2 text-center text-gray-700">100% Gross</td>
+                <td className="p-2 text-right font-medium">
+                  ₹{(totals.grossPaise / 100).toFixed(2)}
+                </td>
+              </tr>
+              <tr>
+                <td className="border-r border-gray-300 p-2 text-gray-800">
+                  Less: SessionBook Platform Commission
+                </td>
+                <td className="border-r border-gray-300 p-2 text-center text-gray-700">4% of Gross</td>
+                <td className="p-2 text-right text-gray-800">
+                  -₹{(totals.feePaise / 100).toFixed(2)}
+                </td>
+              </tr>
+              <tr>
+                <td className="border-r border-gray-300 p-2 text-gray-800">
+                  Less: Payment Gateway Processing Fee (Razorpay)
+                </td>
+                <td className="border-r border-gray-300 p-2 text-center text-gray-700">2% of Gross</td>
+                <td className="p-2 text-right text-gray-800">
+                  -₹{(totals.gatewayFeePaise / 100).toFixed(2)}
+                </td>
+              </tr>
+              <tr>
+                <td className="border-r border-gray-300 p-2 text-gray-800">
+                  Less: GST on Payment Gateway Fee
+                </td>
+                <td className="border-r border-gray-300 p-2 text-center text-gray-700">18% on 2% fee</td>
+                <td className="p-2 text-right text-gray-800">
+                  -₹{(totals.gatewayGstPaise / 100).toFixed(2)}
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr className="bg-gray-100 border-t-2 border-black font-bold text-xs">
+                <td colSpan={2} className="border-r border-gray-400 p-2 text-left uppercase">
+                  Net Creator Disbursable Payout
+                </td>
+                <td className="p-2 text-right text-black font-bold">
+                  ₹{(totals.netPaise / 100).toFixed(2)}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        {/* Breakdown of Invoiced Sessions */}
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-1.5">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-black">
+              Session Itemization ({invoices.length})
+            </h2>
+          </div>
+          <table className="w-full border-collapse border border-gray-300 text-[10px]">
+            <thead>
+              <tr className="bg-gray-100 text-black border-b border-gray-300 font-semibold uppercase text-[9px]">
+                <th className="border-r border-gray-300 p-1.5 text-left w-20">Invoice #</th>
+                <th className="border-r border-gray-300 p-1.5 text-left w-28">Date & Time</th>
+                <th className="border-r border-gray-300 p-1.5 text-left">Client & Session</th>
+                <th className="border-r border-gray-300 p-1.5 text-right w-16">Gross (₹)</th>
+                <th className="border-r border-gray-300 p-1.5 text-right w-16">Plat. (4%)</th>
+                <th className="border-r border-gray-300 p-1.5 text-right w-16">P.G. + Tax</th>
+                <th className="border-r border-gray-300 p-1.5 text-right w-18">Net Payout</th>
+                <th className="p-1.5 text-center w-16">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {invoices.map((inv) => {
+                const pgFee = parseFloat(inv.gatewayFeeRupees || (parseFloat(inv.grossRupees) * 0.02).toFixed(2));
+                const pgGst = parseFloat(inv.gatewayGstRupees || (parseFloat(inv.grossRupees) * 0.02 * 0.18).toFixed(2));
+                const totalPgAndTax = (pgFee + pgGst).toFixed(2);
+                const isRefunded = inv.status === "REFUNDED";
+
+                return (
+                  <tr key={`print-${inv.id}`}>
+                    <td className="border-r border-gray-200 p-1.5 font-mono text-[9px] font-semibold text-black">
+                      {inv.invoiceNumber}
+                    </td>
+                    <td className="border-r border-gray-200 p-1.5 text-gray-800 whitespace-nowrap">
+                      {format(parseISO(inv.date), "dd/MM/yyyy HH:mm")}
+                    </td>
+                    <td className="border-r border-gray-200 p-1.5 text-gray-900">
+                      <div className="font-semibold">{inv.clientName}</div>
+                      <div className="text-gray-600 text-[9px]">
+                        {inv.sessionTitle} ({inv.durationMinutes}m)
+                      </div>
+                    </td>
+                    <td className="border-r border-gray-200 p-1.5 text-right">
+                      ₹{parseFloat(inv.grossRupees).toFixed(2)}
+                    </td>
+                    <td className="border-r border-gray-200 p-1.5 text-right text-gray-700">
+                      -₹{parseFloat(inv.platformFeeRupees).toFixed(2)}
+                    </td>
+                    <td className="border-r border-gray-200 p-1.5 text-right text-gray-700">
+                      -₹{totalPgAndTax}
+                    </td>
+                    <td className="border-r border-gray-200 p-1.5 text-right font-semibold text-black">
+                      {isRefunded ? (
+                        <span className="line-through text-gray-400">
+                          ₹{parseFloat(inv.netPayoutRupees).toFixed(2)}
+                        </span>
+                      ) : (
+                        `₹${parseFloat(inv.netPayoutRupees).toFixed(2)}`
+                      )}
+                    </td>
+                    <td className="p-1.5 text-center font-semibold text-[9px] text-gray-800 uppercase">
+                      {inv.status}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Statement Footer Note */}
+        <div className="mt-8 pt-3 border-t border-gray-300 text-[10px] text-gray-500 flex justify-between">
+          <div>This is a system-generated electronic financial statement from SessionBook.</div>
+          <div>Page 1 of 1</div>
+        </div>
       </div>
 
       {/* Date Range & Filter Card (hidden in print) */}
@@ -261,8 +425,8 @@ export default function InvoicesClientView({
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
+      {/* KPI Cards (hidden on print in favor of standard accounting statement) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 print:hidden">
         <div className="p-5 rounded-2xl bg-white border border-gray-200 shadow-xs">
           <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
             Total Sessions
@@ -307,13 +471,13 @@ export default function InvoicesClientView({
         </div>
       </div>
 
-      {/* Invoices Table */}
-      <div className="space-y-4">
+      {/* Invoices Table (Screen View) */}
+      <div className="space-y-4 print:hidden">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-gray-950 print:text-black">
+          <h2 className="text-base font-bold text-gray-950">
             Invoiced Sessions ({invoices.length})
           </h2>
-          <span className="text-xs text-gray-400 print:hidden">
+          <span className="text-xs text-gray-400">
             Showing {fromDate || "Start"} to {toDate || "Present"}
           </span>
         </div>
@@ -332,7 +496,7 @@ export default function InvoicesClientView({
           </div>
         ) : (
           <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-xs">
-            <table className="w-full text-left text-xs sm:text-sm text-gray-700 print:text-black">
+            <table className="w-full text-left text-xs sm:text-sm text-gray-700">
               <thead className="bg-gray-50/75 text-[11px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
                 <tr>
                   <th className="py-3 px-4">Invoice #</th>
@@ -343,7 +507,7 @@ export default function InvoicesClientView({
                   <th className="py-3 px-4 text-right">Platform (4%)</th>
                   <th className="py-3 px-4 text-right">Net Payout</th>
                   <th className="py-3 px-4 text-center">Status</th>
-                  <th className="py-3 px-4 text-right print:hidden">Action</th>
+                  <th className="py-3 px-4 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -351,7 +515,7 @@ export default function InvoicesClientView({
                   const isRefunded = inv.status === "REFUNDED";
                   return (
                     <tr key={inv.id} className="hover:bg-gray-50/60 transition-colors">
-                      <td className="py-3.5 px-4 font-mono text-xs font-semibold text-orange-600 print:text-black">
+                      <td className="py-3.5 px-4 font-mono text-xs font-semibold text-orange-600">
                         {inv.invoiceNumber}
                       </td>
                       <td className="py-3.5 px-4 text-gray-600 whitespace-nowrap text-xs">
@@ -391,7 +555,7 @@ export default function InvoicesClientView({
                           {inv.status}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-right print:hidden">
+                      <td className="py-3.5 px-4 text-right">
                         <button
                           onClick={() => setSelectedInvoice(inv)}
                           className="px-2.5 py-1 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold transition-colors cursor-pointer"
@@ -410,7 +574,7 @@ export default function InvoicesClientView({
 
       {/* Individual Invoice View Modal */}
       {selectedInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs print:hidden">
           <div className="w-full max-w-lg rounded-2xl bg-white border border-gray-200 p-6 shadow-xl space-y-6">
             <div className="flex items-center justify-between border-b border-gray-100 pb-4">
               <div>

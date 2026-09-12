@@ -105,6 +105,8 @@ export async function GET(req: Request) {
     const totalSessions = items.length;
     const totalGrossPaise = activeItems.reduce((sum, i) => sum + i.grossAmountPaise, 0);
     const totalPlatformFeePaise = activeItems.reduce((sum, i) => sum + i.platformFeePaise, 0);
+    const totalGatewayFeePaise = activeItems.reduce((sum, i) => sum + (i.gatewayFeePaise || 0), 0);
+    const totalGatewayGstPaise = activeItems.reduce((sum, i) => sum + (i.gatewayGstPaise || 0), 0);
     const totalTaxAndGatewayPaise = activeItems.reduce((sum, i) => sum + i.totalTaxAndGatewayPaise, 0);
     const totalNetPayoutPaise = activeItems.reduce((sum, i) => sum + i.netPayoutPaise, 0);
 
@@ -147,7 +149,7 @@ export async function GET(req: Request) {
       // Add summary row at bottom
       csvRows.push("");
       csvRows.push(
-        `"TOTALS (Active)","","","","",${totalSessions},${(totalGrossPaise / 100).toFixed(2)},${(totalPlatformFeePaise / 100).toFixed(2)},${(totalTaxAndGatewayPaise / 100).toFixed(2)},"",${(totalNetPayoutPaise / 100).toFixed(2)},"",""`
+        `"TOTALS (Active)","","","","",${totalSessions},${(totalGrossPaise / 100).toFixed(2)},${(totalPlatformFeePaise / 100).toFixed(2)},${(totalGatewayFeePaise / 100).toFixed(2)},${(totalGatewayGstPaise / 100).toFixed(2)},${(totalNetPayoutPaise / 100).toFixed(2)},"",""`
       );
 
       const csvContent = [csvHeader, ...csvRows].join("\n");
@@ -169,6 +171,8 @@ export async function GET(req: Request) {
       totalSessions,
       totalGrossPaise,
       totalPlatformFeePaise,
+      totalGatewayFeePaise,
+      totalGatewayGstPaise,
       totalTaxAndGatewayPaise,
       totalNetPayoutPaise,
       items,
