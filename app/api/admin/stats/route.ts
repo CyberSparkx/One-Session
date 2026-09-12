@@ -37,9 +37,17 @@ export async function GET() {
       },
     });
 
+    const calculateNetPayout = (grossPaise: number, recordedPayout?: number | null) => {
+      // Recompute exact net after 4% platform + 2% gateway + 18% GST on gateway
+      const platform = Math.round(grossPaise * 0.04);
+      const gateway = Math.round(grossPaise * 0.02);
+      const gst = Math.round(gateway * 0.18);
+      return grossPaise - platform - (gateway + gst);
+    };
+
     const totalGmvPaise = payments.reduce((sum, p) => sum + p.amountTotalPaise, 0);
     const totalPlatformFeePaise = payments.reduce((sum, p) => sum + p.platformFeePaise, 0);
-    const totalCreatorPayoutsPaise = payments.reduce((sum, p) => sum + p.creatorPayoutPaise, 0);
+    const totalCreatorPayoutsPaise = payments.reduce((sum, p) => sum + calculateNetPayout(p.amountTotalPaise, p.creatorPayoutPaise), 0);
 
     // In-flight reserve (session in future) vs completed pending payout
     let totalInFlightReservePaise = 0;
@@ -49,13 +57,14 @@ export async function GET() {
     payments.forEach((p) => {
       const isSessionFinished =
         p.booking.status === "COMPLETED" || new Date(p.booking.scheduledEnd) <= now;
+      const netPayout = calculateNetPayout(p.amountTotalPaise, p.creatorPayoutPaise);
 
       if (p.payoutStatus === "MANUALLY_PAID" || p.payoutStatus === "ROUTE_TRANSFERRED") {
-        totalDisbursedPayoutPaise += p.creatorPayoutPaise;
+        totalDisbursedPayoutPaise += netPayout;
       } else if (isSessionFinished) {
-        totalPendingEligiblePayoutPaise += p.creatorPayoutPaise;
+        totalPendingEligiblePayoutPaise += netPayout;
       } else {
-        totalInFlightReservePaise += p.creatorPayoutPaise;
+        totalInFlightReservePaise += netPayout;
       }
     });
 

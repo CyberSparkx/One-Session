@@ -318,7 +318,10 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <div className="text-2xl font-black text-blue-700 tracking-tight">
-            ₹{(stats?.totalInFlightReserveRupees || 0).toLocaleString("en-IN")}
+            ₹{(stats?.totalInFlightReserveRupees || 0).toLocaleString("en-IN", {
+              minimumFractionDigits: (stats?.totalInFlightReserveRupees || 0) % 1 !== 0 ? 2 : 0,
+              maximumFractionDigits: 2,
+            })}
           </div>
           <p className="text-[11px] font-medium text-blue-600/80 mt-1">Held until session concludes</p>
         </div>
@@ -334,7 +337,10 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <div className="text-2xl font-black text-emerald-700 tracking-tight">
-            ₹{(stats?.totalPendingEligiblePayoutRupees || 0).toLocaleString("en-IN")}
+            ₹{(stats?.totalPendingEligiblePayoutRupees || 0).toLocaleString("en-IN", {
+              minimumFractionDigits: (stats?.totalPendingEligiblePayoutRupees || 0) % 1 !== 0 ? 2 : 0,
+              maximumFractionDigits: 2,
+            })}
           </div>
           <p className="text-[11px] font-medium text-emerald-600/80 mt-1">Sessions finished & due</p>
         </div>
@@ -431,10 +437,10 @@ export default function AdminDashboardPage() {
               <thead className="bg-slate-50/80 text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-200/80 font-bold">
                 <tr>
                   <th className="py-3.5 px-5">Creator Profile</th>
-                  <th className="py-3.5 px-4">This Month Bookings</th>
-                  <th className="py-3.5 px-4">In-Flight Reserve (Upcoming)</th>
-                  <th className="py-3.5 px-4">Eligible Due (96% Share)</th>
-                  <th className="py-3.5 px-4">Disbursed Payouts</th>
+                  <th className="py-3 px-4 font-bold">This Month Bookings</th>
+                  <th className="py-3 px-4 font-bold">In-Flight Reserve (Upcoming)</th>
+                  <th className="py-3 px-4 font-bold">Eligible Due</th>
+                  <th className="py-3 px-4 font-bold">Disbursed Payouts</th>
                   <th className="py-3.5 px-4">Payout Destination</th>
                   <th className="py-3.5 px-5 text-right">Settlement</th>
                 </tr>
@@ -483,14 +489,20 @@ export default function AdminDashboardPage() {
                             <span>{c.thisMonthBookingsCount} bookings</span>
                           </span>
                           <div className="text-[11px] text-slate-400 mt-1 font-medium">
-                            ₹{(c.thisMonthCreatorPayoutPaise / 100).toLocaleString("en-IN")} earned this month
+                            ₹{(c.thisMonthCreatorPayoutPaise / 100).toLocaleString("en-IN", {
+                              minimumFractionDigits: (c.thisMonthCreatorPayoutPaise / 100) % 1 !== 0 ? 2 : 0,
+                              maximumFractionDigits: 2,
+                            })} earned this month
                           </div>
                         </td>
 
                         {/* In-Flight Reserve */}
                         <td className="py-4 px-4">
                           <div className="font-bold text-blue-700 text-sm">
-                            ₹{(c.inFlightReservePaise / 100).toLocaleString("en-IN")}
+                            ₹{(c.inFlightReservePaise / 100).toLocaleString("en-IN", {
+                              minimumFractionDigits: (c.inFlightReservePaise / 100) % 1 !== 0 ? 2 : 0,
+                              maximumFractionDigits: 2,
+                            })}
                           </div>
                           <div className="text-[11px] text-slate-400 mt-0.5">
                             {c.upcomingSessionsCount} scheduled session{c.upcomingSessionsCount !== 1 ? "s" : ""}
@@ -500,7 +512,10 @@ export default function AdminDashboardPage() {
                         {/* Eligible Pending Payout */}
                         <td className="py-4 px-4">
                           <div className="font-black text-emerald-700 text-base tracking-tight">
-                            ₹{(c.netPendingPayoutPaise / 100).toLocaleString("en-IN")}
+                            ₹{(c.netPendingPayoutPaise / 100).toLocaleString("en-IN", {
+                              minimumFractionDigits: (c.netPendingPayoutPaise / 100) % 1 !== 0 ? 2 : 0,
+                              maximumFractionDigits: 2,
+                            })}
                           </div>
                           {c.balanceAdjustmentPaise < 0 ? (
                             <div className="text-[10px] text-amber-700 flex items-center gap-1 font-semibold mt-0.5">
@@ -603,7 +618,7 @@ export default function AdminDashboardPage() {
                   <th className="py-3.5 px-4">Gross Paid</th>
                   <th className="py-3.5 px-4">Platform 4%</th>
                   <th className="py-3.5 px-4">Gateway & Tax (2%+GST)</th>
-                  <th className="py-3.5 px-4">Creator 96%</th>
+                  <th className="py-3.5 px-4">Net Creator Payout</th>
                   <th className="py-3.5 px-4">Reserve Status</th>
                   <th className="py-3.5 px-4">Payout</th>
                   <th className="py-3.5 px-4 text-right">Action</th>
@@ -621,6 +636,7 @@ export default function AdminDashboardPage() {
                     const grossRupees = tx.amountTotalPaise / 100;
                     const rzpFee = (grossRupees * 0.02).toFixed(2);
                     const rzpGst = (grossRupees * 0.02 * 0.18).toFixed(2);
+                    const netCreatorRupees = (grossRupees - (tx.platformFeePaise / 100) - (parseFloat(rzpFee) + parseFloat(rzpGst))).toFixed(2);
                     return (
                       <tr key={tx.id} className="hover:bg-slate-50/70 transition-colors">
                         <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500">
@@ -645,7 +661,10 @@ export default function AdminDashboardPage() {
                           <span className="text-[10px] text-slate-400 block">+ ₹{rzpGst} GST</span>
                         </td>
                         <td className="py-3.5 px-4 font-black text-emerald-600">
-                          ₹{(tx.creatorPayoutPaise / 100).toLocaleString("en-IN")}
+                          ₹{parseFloat(netCreatorRupees).toLocaleString("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
                         </td>
 
                         {/* Reserve Lifecycle */}
