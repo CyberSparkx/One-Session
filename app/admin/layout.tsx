@@ -25,12 +25,8 @@ export default async function AdminLayout({
   }
 
   // Strictly enforce ADMIN role for the admin dashboard.
-  // If there are no admins in the database yet (initial setup),
-  // the first registered creator can access or claim it, otherwise block non-admins.
-  const adminCount = await prisma.user.count({ where: { role: Role.ADMIN } });
-
-  if (adminCount > 0 && user.role !== Role.ADMIN) {
-    // Creators or regular users attempting to open /admin are redirected to their allowed pages
+  // ONLY users with role === Role.ADMIN can access /admin.
+  if (user.role !== Role.ADMIN) {
     if (user.role === Role.CREATOR) {
       redirect("/dashboard");
     } else {

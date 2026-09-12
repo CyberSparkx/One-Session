@@ -15,8 +15,7 @@ export async function GET() {
       where: { email: session.user.email },
     });
 
-    const adminCount = await prisma.user.count({ where: { role: "ADMIN" } });
-    if (adminCount > 0 && user?.role !== "ADMIN") {
+    if (!user || user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
     }
 
