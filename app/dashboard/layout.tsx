@@ -21,7 +21,16 @@ export default async function DashboardLayout({
     include: { creatorProfile: true },
   });
 
-  if (!user || !user.creatorProfile) {
+  if (!user) {
+    redirect("/login");
+  }
+
+  // Regular clients/learners (USER role) can only view the homepage and public booking pages
+  if (user.role === "USER") {
+    redirect("/");
+  }
+
+  if (!user.creatorProfile) {
     redirect("/login");
   }
 

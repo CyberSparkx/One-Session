@@ -28,6 +28,7 @@ export default function SignUpPage() {
     name: "",
     email: "",
     password: "",
+    role: "CREATOR" as "CREATOR" | "USER",
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -78,7 +79,11 @@ export default function SignUpPage() {
       if (signInResult?.error) {
         router.push("/login?registered=true");
       } else {
-        router.push("/dashboard");
+        if (formData.role === "USER") {
+          router.push("/");
+        } else {
+          router.push("/dashboard");
+        }
       }
     } catch (err: any) {
       setGeneralError(err.message || "An unexpected error occurred");
@@ -197,6 +202,42 @@ export default function SignUpPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Account Type Selection */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                  I want to join as
+                </label>
+                <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: "CREATOR" })}
+                    className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      formData.role === "CREATOR"
+                        ? "bg-white text-orange-600 shadow-xs border border-gray-200/80"
+                        : "text-gray-500 hover:text-gray-900"
+                    }`}
+                  >
+                    Creator / Mentor
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: "USER" })}
+                    className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      formData.role === "USER"
+                        ? "bg-white text-orange-600 shadow-xs border border-gray-200/80"
+                        : "text-gray-500 hover:text-gray-900"
+                    }`}
+                  >
+                    Client / Learner
+                  </button>
+                </div>
+                <p className="text-[11px] text-gray-400 mt-1">
+                  {formData.role === "CREATOR"
+                    ? "Offer 1:1 sessions, set your availability, and earn money."
+                    : "Book and attend 1:1 sessions with verified creators."}
+                </p>
+              </div>
+
               {/* Name */}
               <div>
                 <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">

@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { name, email, password, timezone } = result.data;
+    const { name, email, password, timezone, role } = result.data;
     const normalizedEmail = email.toLowerCase().trim();
 
     const existingUser = await prisma.user.findUnique({
@@ -32,62 +32,78 @@ export async function POST(req: Request) {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Generate a unique slug based on name
-    const baseSlug = name
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "creator";
+    // If role is CREATOR or ADMIN, set up creator profile and availability
+    const assignedRole = role === "USER" ? Role.USER : Role.CREATOR;
 
-    let slug = baseSlug;
-    let counter = 1;
-    while (await prisma.creatorProfile.findUnique({ where: { slug } })) {
-      slug = `${baseSlug}-${counter}`;
-      counter++;
-    }
-
-    // Create User, CreatorProfile, and default Mon-Fri availability in a transaction
-    const newUser = await prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
+    let newUser;
+    if (assignedRole === Role.USER) {
+      newUser = await prisma.user.create({
         data: {
           name,
           email: normalizedEmail,
           passwordHash,
           timezone,
-          role: Role.CREATOR,
-          creatorProfile: {
-            create: {
-              slug,
-              bio: `Hi, I'm ${name}. Book a 1:1 session with me to discuss strategy, mentorship, or consultation!`,
-              isPublished: true,
-              availabilityRules: {
-                create: [
-                  { dayOfWeek: 1, startTime: "10:00", endTime: "18:00" }, // Mon
-                  { dayOfWeek: 2, startTime: "10:00", endTime: "18:00" }, // Tue
-                  { dayOfWeek: 3, startTime: "10:00", endTime: "18:00" }, // Wed
-                  { dayOfWeek: 4, startTime: "10:00", endTime: "18:00" }, // Thu
-                  { dayOfWeek: 5, startTime: "10:00", endTime: "18:00" }, // Fri
-                ],
-              },
-              sessionTypes: {
-                create: {
-                  title: "30-Minute Consultation",
-                  description: "One-on-one session to discuss your questions and goals.",
-                  durationMinutes: 30,
-                  priceInPaise: 150000, // ₹1,500
-                  bufferBeforeMin: 0,
-                  bufferAfterMin: 15,
-                  isActive: true,
+          role: Role.USER,
+        },
+      });
+    } else {
+      // Generate a unique slug based on name
+      const baseSlug = name
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "creator";
+
+      let slug = baseSlug;
+      let counter = 1;
+      while (await prisma.creatorProfile.findUnique({ where: { slug } })) {
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+      }
+
+      // Create User, CreatorProfile, and default Mon-Fri availability in a transaction
+      newUser = await prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({
+          data: {
+            name,
+            email: normalizedEmail,
+            passwordHash,
+            timezone,
+            role: Role.CREATOR,
+            creatorProfile: {
+              create: {
+                slug,
+                bio: `Hi, I'm ${name}. Book a 1:1 session with me to discuss strategy, mentorship, or consultation!`,
+                isPublished: true,
+                availabilityRules: {
+                  create: [
+                    { dayOfWeek: 1, startTime: "10:00", endTime: "18:00" }, // Mon
+                    { dayOfWeek: 2, startTime: "10:00", endTime: "18:00" }, // Tue
+                    { dayOfWeek: 3, startTime: "10:00", endTime: "18:00" }, // Wed
+                    { dayOfWeek: 4, startTime: "10:00", endTime: "18:00" }, // Thu
+                    { dayOfWeek: 5, startTime: "10:00", endTime: "18:00" }, // Fri
+                  ],
+                },
+                sessionTypes: {
+                  create: {
+                    title: "30-Minute Consultation",
+                    description: "One-on-one session to discuss your questions and goals.",
+                    durationMinutes: 30,
+                    priceInPaise: 150000, // ₹1,500
+                    bufferBeforeMin: 0,
+                    bufferAfterMin: 15,
+                    isActive: true,
+                  },
                 },
               },
             },
           },
-        },
-        include: { creatorProfile: true },
-      });
+          include: { creatorProfile: true },
+        });
 
-      return user;
-    });
+        return user;
+      });
+    }
 
     return NextResponse.json(
       {
@@ -96,7 +112,8 @@ export async function POST(req: Request) {
           id: newUser.id,
           name: newUser.name,
           email: newUser.email,
-          slug: newUser.creatorProfile?.slug,
+          role: newUser.role,
+          slug: (newUser as any).creatorProfile?.slug || null,
         },
       },
       { status: 201 }

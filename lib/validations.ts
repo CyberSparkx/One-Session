@@ -39,6 +39,7 @@ export const SignUpSchema = z.object({
   email: AllowedEmailSchema,
   password: z.string().min(8, "Password must be at least 8 characters"),
   timezone: z.string().default("Asia/Kolkata"),
+  role: z.enum(["CREATOR", "USER", "ADMIN"]).default("CREATOR"),
 });
 
 export const LoginSchema = z.object({

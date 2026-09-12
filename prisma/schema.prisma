@@ -9,7 +9,7 @@ generator client {
 
 model User {
   id             String          @id @default(auto()) @map("_id") @db.ObjectId
-  role           String          @default("CREATOR") // "ADMIN" | "CREATOR"
+  role           String          @default("CREATOR") // "ADMIN" | "CREATOR" | "USER"
   name           String
   email          String          @unique
   phone          String?

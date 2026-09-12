@@ -14,6 +14,15 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const adminUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    const adminCount = await prisma.user.count({ where: { role: "ADMIN" } });
+    if (adminCount > 0 && adminUser?.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
+    }
+
     const { id } = await params;
 
     const booking = await prisma.booking.findUnique({
