@@ -85,6 +85,8 @@ model Booking {
   scheduledEnd   DateTime       // stored UTC
   status         String         @default("PENDING_PAYMENT") // PENDING_PAYMENT, CONFIRMED, CANCELLED, REFUNDED, COMPLETED
   cancelToken    String         @unique @default(uuid())
+  cancellationReason String?
+  cancelledBy    String?        // "CLIENT" | "CREATOR"
   createdAt      DateTime       @default(now())
   payment        Payment?
 }

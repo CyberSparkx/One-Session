@@ -10,6 +10,8 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const now = new Date();
+
     const payments = await prisma.payment.findMany({
       include: {
         booking: {
@@ -34,6 +36,11 @@ export async function GET() {
         } catch (e) {}
       }
 
+      const isCompleted =
+        p.booking.status === "COMPLETED" || new Date(p.booking.scheduledEnd) <= now;
+      const isUpcoming =
+        p.booking.status === "CONFIRMED" && new Date(p.booking.scheduledEnd) > now;
+
       return {
         id: p.id,
         bookingId: p.bookingId,
@@ -41,14 +48,25 @@ export async function GET() {
         razorpayPaymentId: p.razorpayPaymentId,
         clientName: p.booking.clientName,
         clientEmail: p.booking.clientEmail,
+        clientPhone: p.booking.clientPhone,
+        creatorId: p.booking.creatorId,
         creatorName: p.booking.creator.user.name,
         creatorEmail: p.booking.creator.user.email,
         creatorPayoutMethod: p.booking.creator.payoutMethod,
         creatorPayoutDetails: payoutDetails,
         sessionTitle: p.booking.sessionType.title,
+        scheduledStart: p.booking.scheduledStart,
+        scheduledEnd: p.booking.scheduledEnd,
+        bookingStatus: p.booking.status,
+        isCompleted,
+        isUpcoming,
+        cancellationReason: p.booking.cancellationReason,
+        cancelledBy: p.booking.cancelledBy,
         amountTotalPaise: p.amountTotalPaise,
         platformFeePaise: p.platformFeePaise,
         creatorPayoutPaise: p.creatorPayoutPaise,
+        refundType: p.refundType,
+        refundAmountPaise: p.refundAmountPaise,
         status: p.status,
         payoutStatus: p.payoutStatus,
         createdAt: p.createdAt,

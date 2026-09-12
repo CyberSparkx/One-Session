@@ -83,6 +83,8 @@ export async function POST(
         where: { id },
         data: {
           status: isPaid ? BookingStatus.REFUNDED : BookingStatus.CANCELLED,
+          cancellationReason: reason?.trim() || "Client requested cancellation",
+          cancelledBy: "CLIENT",
         },
       });
 

@@ -95,7 +95,11 @@ export async function POST(
       // 1. Update booking status
       await tx.booking.update({
         where: { id },
-        data: { status: newBookingStatus },
+        data: {
+          status: newBookingStatus,
+          cancellationReason: reason?.trim() || "Cancelled by creator",
+          cancelledBy: "CREATOR",
+        },
       });
 
       // 2. Update payment status and refund audit
