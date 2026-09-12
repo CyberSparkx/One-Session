@@ -68,8 +68,8 @@ export async function GET(req: Request) {
       // Total Gateway + Tax deduction:
       const totalTaxAndGatewayPaise = gatewayFeePaise + gatewayGstPaise;
 
-      // Net creator payout is recorded in database
-      const netPaise = b.payment?.creatorPayoutPaise || (grossPaise - platformFeePaise);
+      // Net creator payout after deducting Platform Fee (4%) + Gateway Fee (2%) + GST on Gateway (18% of 2%):
+      const netPaise = grossPaise - platformFeePaise - totalTaxAndGatewayPaise;
 
       return {
         id: b.id,
