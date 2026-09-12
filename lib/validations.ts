@@ -27,6 +27,37 @@ export function isAllowedEmailDomain(email: string): boolean {
 export const ALLOWED_EMAIL_ERROR =
   "Only Google (Gmail) or Yahoo email addresses are allowed (e.g., @gmail.com, @yahoo.com)";
 
+/**
+ * Validates an Indian mobile phone number:
+ * - Exactly 10 digits
+ * - Starts with 6, 7, 8, or 9 (standard Indian mobile operator ranges: Jio, Airtel, Vi, BSNL)
+ * - May optionally be prefixed with +91, 91, or 0, but clean digits must be 10 digits starting with 6-9
+ */
+export const INDIAN_PHONE_REGEX = /^[6-9]\d{9}$/;
+
+export function sanitizeIndianPhoneNumber(phone: string): string {
+  if (!phone || typeof phone !== "string") return "";
+  // Strip all whitespace, dashes, parens, and plus signs
+  const cleaned = phone.replace(/[\s\-\(\)\+]/g, "");
+  // If starts with 91 and has 12 digits, strip 91
+  if (cleaned.startsWith("91") && cleaned.length === 12) {
+    return cleaned.slice(2);
+  }
+  // If starts with 0 and has 11 digits, strip 0
+  if (cleaned.startsWith("0") && cleaned.length === 11) {
+    return cleaned.slice(1);
+  }
+  return cleaned;
+}
+
+export function isValidIndianPhoneNumber(phone: string): boolean {
+  const sanitized = sanitizeIndianPhoneNumber(phone);
+  return INDIAN_PHONE_REGEX.test(sanitized);
+}
+
+export const INDIAN_PHONE_ERROR =
+  "Please enter a valid 10-digit Indian phone number (starting with 6, 7, 8, or 9)";
+
 export const AllowedEmailSchema = z
   .string()
   .email("Valid email address is required")
@@ -94,7 +125,12 @@ export const CreateBookingSchema = z.object({
   scheduledStart: z.string().datetime({ message: "scheduledStart must be an ISO 8601 string" }),
   clientName: z.string().min(2, "Name must be at least 2 characters"),
   clientEmail: AllowedEmailSchema,
-  clientPhone: z.string().min(5, "Valid phone number is required"),
+  clientPhone: z
+    .string()
+    .transform((val) => sanitizeIndianPhoneNumber(val))
+    .refine((val) => INDIAN_PHONE_REGEX.test(val), {
+      message: INDIAN_PHONE_ERROR,
+    }),
   notes: z.string().max(1000).optional(),
 });
 

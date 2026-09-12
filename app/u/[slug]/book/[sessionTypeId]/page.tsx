@@ -26,7 +26,13 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import AnimatedBackground from "@/components/AnimatedBackground";
-import { isAllowedEmailDomain, ALLOWED_EMAIL_ERROR } from "@/lib/validations";
+import {
+  isAllowedEmailDomain,
+  ALLOWED_EMAIL_ERROR,
+  isValidIndianPhoneNumber,
+  sanitizeIndianPhoneNumber,
+  INDIAN_PHONE_ERROR,
+} from "@/lib/validations";
 
 interface Slot {
   startTime: string;
@@ -202,6 +208,11 @@ export default function BookingPage({
       return;
     }
 
+    if (!isValidIndianPhoneNumber(formData.clientPhone)) {
+      setError(INDIAN_PHONE_ERROR);
+      return;
+    }
+
     setSubmitting(true);
     setError("");
 
@@ -234,7 +245,12 @@ export default function BookingPage({
       const data = await res.json();
 
       if (!res.ok) {
-        const errorMsg = data.details?.clientEmail?.[0] || data.error || "Failed to initiate booking";
+        const errorMsg =
+          data.details?.clientPhone?.[0] ||
+          data.details?.clientEmail?.[0] ||
+          data.details?.clientName?.[0] ||
+          data.error ||
+          "Failed to initiate booking";
         setError(errorMsg);
         setSubmitting(false);
         return;
@@ -491,20 +507,38 @@ export default function BookingPage({
 
                 {/* Phone */}
                 <div>
-                  <label className="block text-[11px] font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                    Phone Number
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-semibold text-gray-700 uppercase tracking-wider">
+                      Mobile Number (India)
+                    </label>
+                    <span className="text-[10px] text-gray-400 font-mono">
+                      {formData.clientPhone.length}/10 digits
+                    </span>
+                  </div>
+                  <div className="relative flex items-center">
+                    <div className="absolute left-3 flex items-center gap-1.5 pointer-events-none text-xs font-bold text-gray-700 border-r border-gray-200 pr-2.5">
+                      <span className="text-base leading-none">🇮🇳</span>
+                      <span>+91</span>
+                    </div>
                     <input
                       type="tel"
                       required
-                      placeholder="+91 98765 43210"
+                      inputMode="numeric"
+                      pattern="[6-9][0-9]{9}"
+                      maxLength={10}
+                      placeholder="9876543210"
                       value={formData.clientPhone}
-                      onChange={(e) => setFormData({ ...formData, clientPhone: e.target.value })}
-                      className="w-full pl-9 pr-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-xs focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                      onChange={(e) => {
+                        // Allow only numeric digits and max 10 characters
+                        const onlyDigits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setFormData({ ...formData, clientPhone: onlyDigits });
+                      }}
+                      className="w-full pl-20 pr-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-xs font-medium tracking-wide focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                     />
                   </div>
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    Enter your 10-digit Indian mobile number (starts with 6, 7, 8, or 9)
+                  </p>
                 </div>
 
                 {/* Notes */}
