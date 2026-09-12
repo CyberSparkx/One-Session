@@ -142,10 +142,16 @@ export function sanitizePhoneNumber(phone: string): string {
 }
 
 export function isValidPhoneForCountry(phone: string, countryCode: string = "IN"): { valid: boolean; error?: string } {
-  const digitsOnly = phone.replace(/\D/g, "");
-  
-  // Require exactly 10 digits for India or default
+  let digitsOnly = phone.replace(/\D/g, "");
+
+  // If phone string includes international country prefix like +91, strip the country dial code
   if (countryCode === "IN" || !countryCode) {
+    if (phone.trim().startsWith("+91") && digitsOnly.startsWith("91") && digitsOnly.length === 12) {
+      digitsOnly = digitsOnly.slice(2);
+    } else if (digitsOnly.length === 11 && digitsOnly.startsWith("0")) {
+      digitsOnly = digitsOnly.slice(1);
+    }
+
     if (digitsOnly.length !== 10) {
       return { valid: false, error: "Please enter a 10-digit phone number" };
     }
