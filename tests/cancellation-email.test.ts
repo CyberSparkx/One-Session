@@ -65,3 +65,28 @@ describe("Booking Cancellation Email Notifications", () => {
     });
   });
 });
+
+describe("Google Calendar Event Deletion and Token Refresh", () => {
+  it("should return false gracefully when no access token or refresh token is present", async () => {
+    const { deleteGoogleCalendarEvent } = await import("../lib/googleCalendar.ts");
+    const result = await deleteGoogleCalendarEvent({
+      scheduledStart: new Date().toISOString(),
+      scheduledEnd: new Date(Date.now() + 1800000).toISOString(),
+      clientName: "Non-existent Client",
+      clientEmail: "none@example.com",
+    });
+
+    assert.equal(result, false);
+  });
+
+  it("should return null for fresh access token when no refresh token is configured", async () => {
+    const { getFreshGoogleAccessToken } = await import("../lib/googleCalendar.ts");
+    const token = await getFreshGoogleAccessToken({
+      googleAccessToken: null,
+      googleRefreshToken: null,
+    });
+
+    assert.equal(token, null);
+  });
+});
+

@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { verifyPaymentSignature } from "@/lib/razorpay";
 import { BookingStatus, PaymentStatus, PayoutStatus } from "@/lib/types";
 import { sendBookingConfirmationEmail } from "@/lib/email";
-import { createGoogleCalendarEvent } from "@/lib/googleCalendar";
+import { createGoogleCalendarEvent, getFreshGoogleAccessToken } from "@/lib/googleCalendar";
 
 export async function POST(req: Request) {
   try {
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
         sessionType: true,
         creator: {
           include: {
-            user: { select: { name: true, email: true, timezone: true, googleAccessToken: true } },
+            user: { select: { id: true, name: true, email: true, timezone: true, googleAccessToken: true, googleRefreshToken: true } },
           },
         },
       },
@@ -96,19 +96,27 @@ export async function POST(req: Request) {
 
     // Automatically sync to Google Calendar if creator signed in with Google
     const creatorUser = (booking as any)?.creator?.user;
-    if (creatorUser?.googleAccessToken) {
+    if (creatorUser?.googleAccessToken || creatorUser?.googleRefreshToken) {
       try {
-        await createGoogleCalendarEvent({
-          accessToken: creatorUser.googleAccessToken,
-          sessionTitle: booking.sessionType.title,
-          scheduledStart: booking.scheduledStart,
-          scheduledEnd: booking.scheduledEnd,
-          clientName: booking.clientName,
-          clientEmail: booking.clientEmail,
-          clientPhone: booking.clientPhone,
-          creatorName: creatorUser.name,
-          creatorEmail: creatorUser.email,
+        const freshToken = await getFreshGoogleAccessToken({
+          id: creatorUser.id,
+          googleAccessToken: creatorUser.googleAccessToken,
+          googleRefreshToken: creatorUser.googleRefreshToken,
         });
+
+        if (freshToken) {
+          await createGoogleCalendarEvent({
+            accessToken: freshToken,
+            sessionTitle: booking.sessionType.title,
+            scheduledStart: booking.scheduledStart,
+            scheduledEnd: booking.scheduledEnd,
+            clientName: booking.clientName,
+            clientEmail: booking.clientEmail,
+            clientPhone: booking.clientPhone,
+            creatorName: creatorUser.name,
+            creatorEmail: creatorUser.email,
+          });
+        }
       } catch (gcalErr) {
         console.warn("Google Calendar sync error:", gcalErr);
       }

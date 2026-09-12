@@ -4,6 +4,7 @@ import { CancelBookingSchema } from "@/lib/validations";
 import { getRazorpayClient } from "@/lib/razorpay";
 import { BookingStatus, PaymentStatus } from "@/lib/types";
 import { sendBookingCancellationEmail } from "@/lib/email";
+import { deleteGoogleCalendarEvent } from "@/lib/googleCalendar";
 
 export async function POST(
   req: Request,
@@ -30,7 +31,7 @@ export async function POST(
         sessionType: true,
         creator: {
           include: {
-            user: { select: { name: true, email: true } },
+            user: { select: { id: true, name: true, email: true, googleAccessToken: true, googleRefreshToken: true } },
           },
         },
       },
@@ -117,6 +118,25 @@ export async function POST(
       });
     } catch (mailErr) {
       console.error("Failed to send booking cancellation email:", mailErr);
+    }
+
+    // Remove event from creator's Google Calendar (web and mobile/phone)
+    const creatorUser = booking.creator?.user;
+    if (creatorUser?.googleAccessToken || creatorUser?.googleRefreshToken) {
+      try {
+        await deleteGoogleCalendarEvent({
+          userId: creatorUser.id,
+          accessToken: creatorUser.googleAccessToken,
+          refreshToken: creatorUser.googleRefreshToken,
+          scheduledStart: booking.scheduledStart,
+          scheduledEnd: booking.scheduledEnd,
+          clientName: booking.clientName,
+          clientEmail: booking.clientEmail,
+          sessionTitle: booking.sessionType.title,
+        });
+      } catch (gcalErr) {
+        console.warn("Failed to delete Google Calendar event upon client cancellation:", gcalErr);
+      }
     }
 
     return NextResponse.json({

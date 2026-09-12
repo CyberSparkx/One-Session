@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { getRazorpayClient } from "@/lib/razorpay";
 import { BookingStatus, PaymentStatus } from "@/lib/types";
 import { sendBookingCancellationEmail } from "@/lib/email";
+import { deleteGoogleCalendarEvent } from "@/lib/googleCalendar";
 
 export async function POST(
   req: Request,
@@ -187,6 +188,24 @@ export async function POST(
       });
     } catch (mailErr) {
       console.error("Failed to trigger cancellation email:", mailErr);
+    }
+
+    // 5. Remove event from creator's Google Calendar (web and mobile/phone)
+    if (user.googleAccessToken || user.googleRefreshToken) {
+      try {
+        await deleteGoogleCalendarEvent({
+          userId: user.id,
+          accessToken: user.googleAccessToken,
+          refreshToken: user.googleRefreshToken,
+          scheduledStart: booking.scheduledStart,
+          scheduledEnd: booking.scheduledEnd,
+          clientName: booking.clientName,
+          clientEmail: booking.clientEmail,
+          sessionTitle: booking.sessionType.title,
+        });
+      } catch (gcalErr) {
+        console.warn("Failed to remove Google Calendar event:", gcalErr);
+      }
     }
 
     const refundLabel = refundType === "FULL" ? "Full Refund (100%)" : "Partial Refund (96%)";
