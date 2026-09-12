@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { CancelBookingSchema } from "@/lib/validations";
 import { getRazorpayClient } from "@/lib/razorpay";
 import { BookingStatus, PaymentStatus } from "@/lib/types";
+import { sendBookingCancellationEmail } from "@/lib/email";
 
 export async function POST(
   req: Request,
@@ -24,7 +25,15 @@ export async function POST(
 
     const booking = await prisma.booking.findUnique({
       where: { id },
-      include: { payment: true },
+      include: {
+        payment: true,
+        sessionType: true,
+        creator: {
+          include: {
+            user: { select: { name: true, email: true } },
+          },
+        },
+      },
     });
 
     if (!booking) {
@@ -47,16 +56,18 @@ export async function POST(
 
     // Process refund if payment was captured and razorpay is configured
     const razorpay = getRazorpayClient();
+    const isPaid = booking.payment && (booking.payment.status === PaymentStatus.CAPTURED || booking.payment.status === "CAPTURED");
+    const refundAmountPaise = isPaid ? booking.payment!.amountTotalPaise : 0;
     let refunded = false;
 
     if (
       razorpay &&
       booking.payment?.razorpayPaymentId &&
-      booking.payment?.status === PaymentStatus.CAPTURED
+      isPaid
     ) {
       try {
         await razorpay.payments.refund(booking.payment.razorpayPaymentId, {
-          amount: booking.payment.amountTotalPaise,
+          amount: refundAmountPaise,
           notes: { reason: reason || "Client cancelled" },
         });
         refunded = true;
@@ -70,7 +81,7 @@ export async function POST(
       const b = await tx.booking.update({
         where: { id },
         data: {
-          status: refunded ? BookingStatus.REFUNDED : BookingStatus.CANCELLED,
+          status: isPaid ? BookingStatus.REFUNDED : BookingStatus.CANCELLED,
         },
       });
 
@@ -79,6 +90,8 @@ export async function POST(
           where: { id: booking.payment.id },
           data: {
             status: PaymentStatus.REFUNDED,
+            refundType: "FULL",
+            refundAmountPaise: refundAmountPaise,
           },
         });
       }
@@ -86,10 +99,30 @@ export async function POST(
       return b;
     });
 
+    // Send cancellation notifications to both the client and creator
+    const cancellationReason = reason?.trim() || "Client requested cancellation";
+    try {
+      await sendBookingCancellationEmail({
+        bookingId: booking.id,
+        sessionTitle: booking.sessionType.title,
+        scheduledStart: booking.scheduledStart,
+        clientName: booking.clientName,
+        clientEmail: booking.clientEmail,
+        creatorName: booking.creator.user.name,
+        creatorEmail: booking.creator.user.email,
+        reason: cancellationReason,
+        refundType: isPaid ? "FULL" : "NONE",
+        refundAmountPaise: refundAmountPaise,
+        cancelledBy: "CLIENT",
+      });
+    } catch (mailErr) {
+      console.error("Failed to send booking cancellation email:", mailErr);
+    }
+
     return NextResponse.json({
       message: "Booking successfully cancelled",
       status: updated.status,
-      refunded,
+      refunded: isPaid,
     });
   } catch (error: any) {
     console.error("POST /api/bookings/[id]/cancel error:", error);

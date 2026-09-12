@@ -183,6 +183,7 @@ export async function POST(
         reason,
         refundType: refundAmountPaise > 0 ? (refundType as "FULL" | "PARTIAL") : "NONE",
         refundAmountPaise,
+        cancelledBy: "CREATOR",
       });
     } catch (mailErr) {
       console.error("Failed to trigger cancellation email:", mailErr);

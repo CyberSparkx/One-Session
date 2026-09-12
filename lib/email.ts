@@ -213,6 +213,7 @@ export interface BookingCancellationEmailData {
   reason?: string;
   refundType: "FULL" | "PARTIAL" | "NONE";
   refundAmountPaise: number;
+  cancelledBy?: "CLIENT" | "CREATOR";
 }
 
 export async function sendBookingCancellationEmail(data: BookingCancellationEmailData) {
@@ -222,13 +223,15 @@ export async function sendBookingCancellationEmail(data: BookingCancellationEmai
   const refundRupees = (data.refundAmountPaise / 100).toLocaleString("en-IN");
   const isRefunded = data.refundAmountPaise > 0;
   const refundTitle = data.refundType === "FULL" ? "Full Refund (100%)" : "Partial Refund (96%)";
+  const isClientCancelled = data.cancelledBy === "CLIENT";
 
   if (!resend) {
     console.log("-----------------------------------------");
     console.log(`[CANCELLATION EMAIL SIMULATION (Resend not configured)]`);
+    console.log(`Cancelled By: ${data.cancelledBy || "CREATOR"}`);
     console.log(`To Client: ${data.clientEmail}`);
-    console.log(`Subject: Cancelled: 1:1 Session with ${data.creatorName}`);
-    console.log(`Reason: ${data.reason || "Cancelled by creator"}`);
+    console.log(`Subject: ${isClientCancelled ? "Booking Cancelled" : "Session Cancelled by Creator"}: 1:1 with ${data.creatorName}`);
+    console.log(`Reason: ${data.reason || (isClientCancelled ? "Client requested cancellation" : "Cancelled by creator")}`);
     console.log(`Refund: ${isRefunded ? `₹${refundRupees} (${refundTitle})` : "None"}`);
     console.log(`To Creator: ${data.creatorEmail}`);
     console.log("-----------------------------------------");
@@ -237,20 +240,32 @@ export async function sendBookingCancellationEmail(data: BookingCancellationEmai
 
   // 1. Email to Client
   try {
+    const clientSubject = isClientCancelled
+      ? `Booking Cancellation Confirmed: 1:1 with ${data.creatorName}`
+      : `Session Cancelled: 1:1 with ${data.creatorName}`;
+
     const clientRes = await resend.emails.send({
       from: fromEmail,
       to: data.clientEmail,
-      subject: `Session Cancelled: 1:1 with ${data.creatorName}`,
+      subject: clientSubject,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
-          <h2 style="color: #dc2626;">Your 1:1 session has been cancelled</h2>
+          <h2 style="color: #dc2626;">
+            ${isClientCancelled ? "Your session booking has been cancelled" : "Your 1:1 session has been cancelled"}
+          </h2>
           <p>Hi ${data.clientName},</p>
-          <p>Your upcoming session with <strong>${data.creatorName}</strong> has been cancelled by the creator.</p>
+          <p>
+            ${
+              isClientCancelled
+                ? `You have successfully cancelled your upcoming 1:1 session with <strong>${data.creatorName}</strong>.`
+                : `Your upcoming session with <strong>${data.creatorName}</strong> has been cancelled by the creator.`
+            }
+          </p>
           
           <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; margin: 20px 0;">
             <p style="margin: 4px 0;"><strong>Session:</strong> ${data.sessionTitle}</p>
             <p style="margin: 4px 0;"><strong>Scheduled Date:</strong> ${formattedDate} at ${formattedTime}</p>
-            <p style="margin: 4px 0;"><strong>Reason:</strong> ${data.reason || "Cancelled by creator"}</p>
+            <p style="margin: 4px 0;"><strong>Reason:</strong> ${data.reason || (isClientCancelled ? "Client requested cancellation" : "Cancelled by creator")}</p>
           </div>
 
           ${
@@ -271,7 +286,7 @@ export async function sendBookingCancellationEmail(data: BookingCancellationEmai
           }
 
           <p style="color: #64748b; font-size: 13px; margin-top: 30px;">
-            If you have any questions, feel free to contact the creator directly at <a href="mailto:${data.creatorEmail}" style="color: #ea580c;">${data.creatorEmail}</a>.
+            If you have any questions, you can contact the creator directly at <a href="mailto:${data.creatorEmail}" style="color: #ea580c;">${data.creatorEmail}</a>.
           </p>
           <p style="color: #94a3b8; font-size: 12px;">Best regards,<br/>SessionBook Team</p>
         </div>
@@ -283,7 +298,7 @@ export async function sendBookingCancellationEmail(data: BookingCancellationEmai
       await resend.emails.send({
         from: fromEmail,
         to: data.creatorEmail,
-        subject: `[Client Copy] Session Cancelled: 1:1 with ${data.creatorName}`,
+        subject: `[Client Copy] ${clientSubject}`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
             <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px; color: #92400e;">
@@ -291,11 +306,17 @@ export async function sendBookingCancellationEmail(data: BookingCancellationEmai
             </div>
             <h2 style="color: #dc2626;">Session Cancelled</h2>
             <p>Hi ${data.clientName},</p>
-            <p>Your session with <strong>${data.creatorName}</strong> has been cancelled.</p>
+            <p>
+              ${
+                isClientCancelled
+                  ? `You have cancelled your upcoming session with <strong>${data.creatorName}</strong>.`
+                  : `Your session with <strong>${data.creatorName}</strong> has been cancelled.`
+              }
+            </p>
             <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; margin: 20px 0;">
               <p style="margin: 4px 0;"><strong>Session:</strong> ${data.sessionTitle}</p>
               <p style="margin: 4px 0;"><strong>Date:</strong> ${formattedDate} at ${formattedTime}</p>
-              <p style="margin: 4px 0;"><strong>Reason:</strong> ${data.reason || "Cancelled by creator"}</p>
+              <p style="margin: 4px 0;"><strong>Reason:</strong> ${data.reason || (isClientCancelled ? "Client requested cancellation" : "Cancelled by creator")}</p>
             </div>
             ${
               isRefunded
@@ -320,21 +341,33 @@ export async function sendBookingCancellationEmail(data: BookingCancellationEmai
 
   // 2. Email Confirmation to Creator
   try {
+    const creatorSubject = isClientCancelled
+      ? `Session Cancelled by Client: ${data.clientName}`
+      : `Cancelled: 1:1 Session with ${data.clientName}`;
+
     await resend.emails.send({
       from: fromEmail,
       to: data.creatorEmail,
-      subject: `Cancelled: 1:1 Session with ${data.clientName}`,
+      subject: creatorSubject,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
-          <h2 style="color: #ea580c;">Session Cancellation Confirmed</h2>
+          <h2 style="color: #ea580c;">
+            ${isClientCancelled ? "Session Cancelled by Client" : "Session Cancellation Confirmed"}
+          </h2>
           <p>Hi ${data.creatorName},</p>
-          <p>You have successfully cancelled your session with <strong>${data.clientName}</strong>.</p>
+          <p>
+            ${
+              isClientCancelled
+                ? `<strong>${data.clientName}</strong> has cancelled their upcoming 1:1 session with you.`
+                : `You have successfully cancelled your session with <strong>${data.clientName}</strong>.`
+            }
+          </p>
           
           <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 20px 0;">
             <p style="margin: 4px 0;"><strong>Session:</strong> ${data.sessionTitle}</p>
-            <p style="margin: 4px 0;"><strong>Scheduled:</strong> ${formattedDate} at ${formattedTime}</p>
-            <p style="margin: 4px 0;"><strong>Client:</strong> ${data.clientName} (${data.clientEmail})</p>
-            <p style="margin: 4px 0;"><strong>Reason:</strong> ${data.reason || "Cancelled by creator"}</p>
+            <p style="margin: 4px 0;"><strong>Scheduled Date:</strong> ${formattedDate} at ${formattedTime}</p>
+            <p style="margin: 4px 0;"><strong>Client:</strong> ${data.clientName} (<a href="mailto:${data.clientEmail}" style="color: #ea580c;">${data.clientEmail}</a>)</p>
+            <p style="margin: 4px 0;"><strong>Reason:</strong> ${data.reason || (isClientCancelled ? "Client requested cancellation" : "Cancelled by creator")}</p>
             ${
               isRefunded
                 ? `
@@ -343,6 +376,16 @@ export async function sendBookingCancellationEmail(data: BookingCancellationEmai
                 : ""
             }
           </div>
+
+          ${
+            isClientCancelled
+              ? `
+            <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 14px; margin: 16px 0; font-size: 13px; color: #1e40af;">
+              ℹ️ <strong>Slot Released:</strong> The reserved time slot has been freed up and is automatically available for other clients to book on your calendar.
+            </div>
+          `
+              : ""
+          }
 
           <p style="color: #64748b; font-size: 13px; margin-top: 30px;">Best regards,<br/>SessionBook Team</p>
         </div>

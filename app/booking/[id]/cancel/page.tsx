@@ -72,7 +72,7 @@ export default function CancelBookingPage({
               Booking Successfully Cancelled
             </h2>
             <p className="text-xs text-gray-600">
-              Your appointment has been removed and any applicable refund will be processed automatically.
+              Your appointment has been removed. A cancellation confirmation email has been sent to you and the creator, and any applicable refund will be processed automatically.
             </p>
             <div className="pt-2">
               <Link
