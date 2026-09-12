@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { CreateBookingSchema } from "@/lib/validations";
 import { getRazorpayClient } from "@/lib/razorpay";
 import { BookingStatus, PaymentStatus, PayoutStatus } from "@/lib/types";
+import { sendBookingConfirmationEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
@@ -29,7 +30,13 @@ export async function POST(req: Request) {
     // 1. Fetch SessionType from DB to recompute price server-side (Never trust client price!)
     const sessionType = await prisma.sessionType.findUnique({
       where: { id: sessionTypeId },
-      include: { creator: true },
+      include: {
+        creator: {
+          include: {
+            user: true,
+          },
+        },
+      },
     });
 
     if (!sessionType || !sessionType.isActive) {
@@ -154,6 +161,26 @@ export async function POST(req: Request) {
         sessionType: true,
       },
     });
+
+    // 6. If session is free, dispatch confirmation email immediately
+    if (priceInPaise === 0 && sessionType.creator?.user) {
+      try {
+        await sendBookingConfirmationEmail({
+          bookingId: booking.id,
+          sessionTitle: sessionType.title,
+          scheduledStart: booking.scheduledStart,
+          scheduledEnd: booking.scheduledEnd,
+          clientName: booking.clientName,
+          clientEmail: booking.clientEmail,
+          creatorName: sessionType.creator.user.name,
+          creatorEmail: sessionType.creator.user.email,
+          creatorTimezone: sessionType.creator.user.timezone,
+          priceInPaise: 0,
+        });
+      } catch (emailErr) {
+        console.error("Email notification error for free booking:", emailErr);
+      }
+    }
 
     return NextResponse.json(
       {
